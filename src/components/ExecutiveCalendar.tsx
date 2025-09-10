@@ -491,7 +491,7 @@ export default function ExecutiveCalendar() {
 
       {/* La Jaula Style Calendar */}
       <div className="flex flex-col lg:flex-row gap-6 max-w-full">
-        {/* Main Calendar */}
+        {/* Main Google-like Calendar */}
         <div className="flex-1 lg:w-3/4 bg-white rounded-lg shadow">
           {/* Header */}
           <div className="p-6 border-b">
@@ -690,7 +690,7 @@ export default function ExecutiveCalendar() {
           </div>
         </div>
 
-        {/* Small Calendar Widget */}
+        {/* Small Calendar Widget on the Right */}
         <div className="w-full lg:w-1/4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-center mb-4">
