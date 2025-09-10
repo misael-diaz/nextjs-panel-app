@@ -220,6 +220,7 @@ export default function ExecutiveCalendar() {
       
       serverLog("🔍 DEBUG: DOM elements check completed");
     }, 100);
+  }, [currentWeek, meetings])
     
 
   const getMeetingsForDate = (date: Date) => {
