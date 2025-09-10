@@ -7,7 +7,7 @@ console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().t
 serverLog("🔍 DEBUG: ExecutiveCalendar component rendered at: " + new Date().toISOString());
 
 import { useState, useEffect } from 'react'
-import { Calendar } from '@/components/ui/calendar'
+import { Calendar as CalendarIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -501,7 +501,7 @@ export default function ExecutiveCalendar() {
                 <p className="text-sm text-gray-600">Centralized view of meetings, events and appointments</p>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-500" />
+                <CalendarIcon className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">
                   {format(currentWeek, 'EEEE, MMMM d, yyyy')}
                 </span>
