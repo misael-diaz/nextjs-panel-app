@@ -165,75 +165,13 @@ export default function ExecutiveCalendar() {
     description: ''
   })
 
-  
-  // Debug logging inside component where variables are available
-  useEffect(() => {
-    console.log("🔍 DEBUG: Current week:", currentWeek);
-    console.log("🔍 DEBUG: Meetings count:", meetings.length);
-    serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
-    serverLog("🔍 DEBUG: Meetings count: " + meetings.length);
-    
-    // Layout debugging
-    console.log("🔍 DEBUG: Layout structure analysis:");
-    console.log("  - Main container: flex flex-col lg:flex-row gap-6 max-w-full");
-    console.log("  - Main calendar: flex-1 lg:w-3/4 bg-white rounded-lg shadow");
-    console.log("  - Small calendar: w-full lg:w-1/4");
-    serverLog("🔍 DEBUG: Layout classes - Main: flex-1 lg:w-3/4, Small: w-full lg:w-1/4 - FINAL LAYOUT");
-    
-    // Check if elements exist in DOM
-    setTimeout(() => {
-      const mainContainer = document.querySelector('.flex.flex-col.lg\\:flex-row');
-      const mainCalendar = document.querySelector('.flex-1.lg\\:w-3\\/4');
-      const smallCalendar = document.querySelector('.w-full.lg\\:w-1\\/4');
-      
-      console.log("🔍 DEBUG: DOM elements found:");
-      console.log("  - Main container:", mainContainer ? "✅ Found" : "❌ Not found");
-      console.log("  - Main calendar:", mainCalendar ? "✅ Found" : "❌ Not found");
-      console.log("  - Small calendar:", smallCalendar ? "✅ Found" : "❌ Not found");
-      
-      if (mainContainer) {
-        const computedStyle = window.getComputedStyle(mainContainer);
-        console.log("🔍 DEBUG: Main container computed styles:");
-        console.log("  - display:", computedStyle.display);
-        console.log("  - flex-direction:", computedStyle.flexDirection);
-        console.log("  - width:", computedStyle.width);
-        console.log("  - max-width:", computedStyle.maxWidth);
-        serverLog("🔍 DEBUG: Container styles - display: " + computedStyle.display + ", flex-direction: " + computedStyle.flexDirection);
-      }
-      
-      if (mainCalendar && smallCalendar) {
-        const mainRect = mainCalendar.getBoundingClientRect();
-        const smallRect = smallCalendar.getBoundingClientRect();
-        const mainStyle = window.getComputedStyle(mainCalendar);
-        const smallStyle = window.getComputedStyle(smallCalendar);
-        
-        console.log("🔍 DEBUG: Element positions:");
-        console.log("  - Main calendar:", mainRect);
-        console.log("  - Small calendar:", smallRect);
-        console.log("  - Overlap check:", mainRect.right > smallRect.left ? "⚠️ OVERLAPPING" : "✅ No overlap");
-        
-        console.log("🔍 DEBUG: Element styles:");
-        console.log("  - Main z-index:", mainStyle.zIndex, "position:", mainStyle.position);
-        console.log("  - Small z-index:", smallStyle.zIndex, "position:", smallStyle.position);
-        console.log("  - Main width:", mainStyle.width, "Small width:", smallStyle.width);
-        
-        serverLog("🔍 DEBUG: Overlap check - Main right: " + mainRect.right + ", Small left: " + smallRect.left);
-        serverLog("🔍 DEBUG: Z-index - Main: " + mainStyle.zIndex + ", Small: " + smallStyle.zIndex);
-        serverLog("🔍 DEBUG: Position - Main: " + mainStyle.position + ", Small: " + smallStyle.position);
-      }
-      
-      serverLog("🔍 DEBUG: DOM elements check completed");
-    }, 100);
-  }, [currentWeek, meetings])
-    
-
-  const getMeetingsForDate = (date: Date) => {
+const getMeetingsForDate = (date: Date) => {
     return meetings.filter(meeting => 
       meeting.date.toDateString() === date.toDateString()
     )
   }
 
-  const getTypeColor = (type: string) => {
+const getTypeColor = (type: string) => {
     switch (type) {
       case 'board': return 'bg-purple-100 text-purple-800'
       case 'executive': return 'bg-blue-100 text-blue-800'
@@ -241,10 +179,7 @@ export default function ExecutiveCalendar() {
       case 'internal': return 'bg-orange-100 text-orange-800'
       default: return 'bg-gray-100 text-gray-800'
     }
-  }
-
-  const getPriorityIcon = (priority: string) => {
-    if (priority === 'high') return <AlertCircle className="w-4 h-4 text-red-500" />
+if (priority === 'high') return <AlertCircle className="w-4 h-4 text-red-500" />
     return null
   }
 
