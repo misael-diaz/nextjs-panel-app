@@ -918,15 +918,30 @@ export default function ExecutiveCalendar() {
                   {String(hour).padStart(2, '0')}:00
                 </div>
                 {getWeekDates(currentWeek).map((date, dayIndex) => {
+                  // Get all meetings for this day and hour, including those that might overlap
                   const dayMeetings = getFilteredMeetings().filter(meeting => {
                     const meetingDate = new Date(meeting.date)
                     const meetingHour = parseInt(meeting.time.split(':')[0])
-                    // Only show meeting in its starting time slot
-                    return meetingDate.toDateString() === date.toDateString() && meetingHour === hour
+                    const meetingMinutes = parseInt(meeting.time.split(':')[1])
+                    const durationHours = getDurationInHours(meeting.duration)
+                    
+                    // Check if this meeting overlaps with the current time slot
+                    const meetingStart = meetingHour * 60 + meetingMinutes
+                    const meetingEnd = meetingStart + (durationHours * 60)
+                    const slotStart = hour * 60
+                    const slotEnd = (hour + 1) * 60
+                    
+                    // Meeting overlaps if it starts before slot ends and ends after slot starts
+                    const overlaps = meetingStart < slotEnd && meetingEnd > slotStart
+                    
+                    return meetingDate.toDateString() === date.toDateString() && overlaps
                   })
                   
                   // Check for overlapping meetings and limit to 2
                   const overlappingMeetings = dayMeetings.length > 2 ? dayMeetings.slice(0, 2) : dayMeetings
+                  
+                  console.log(`🔍 DEBUG: Time slot ${hour}:00 - Found ${dayMeetings.length} meetings, showing ${overlappingMeetings.length}`)
+                  serverLog(`🔍 DEBUG: Time slot ${hour}:00 - Found ${dayMeetings.length} meetings, showing ${overlappingMeetings.length}`)
                   
                   return (
                     <div 
@@ -944,6 +959,10 @@ export default function ExecutiveCalendar() {
                         const [meetingHours, meetingMinutes] = meeting.time.split(':').map(Number)
                         const minutesOffset = meetingMinutes
                         const topOffset = (minutesOffset / 60) * 60 // Convert minutes to pixels (60px per hour)
+                        
+                        // Only show meeting in its starting time slot
+                        const isStartingSlot = meetingHours === hour
+                        if (!isStartingSlot) return null
                         
                         // Google Calendar style: side-by-side layout for overlapping meetings
                         const isOverlapping = overlappingMeetings.length > 1
