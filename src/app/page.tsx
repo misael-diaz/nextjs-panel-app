@@ -11,6 +11,7 @@ import {
   TrendingUp,
   TrendingDown,
   LogOut,
+  Calendar,
   FileText,
   Settings
 } from 'lucide-react'
@@ -18,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import OrderManagement from '@/components/OrderManagement'
+import SimpleCalendar from '@/components/SimpleCalendar'
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -46,6 +48,7 @@ export default function Dashboard() {
 
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'calendar', label: 'Calendar', icon: Calendar },
     { id: 'products', label: 'Products/Inventory', icon: Package },
     { id: 'orders', label: 'Orders/Sales', icon: ShoppingCart },
     { id: 'customers', label: 'Customers', icon: Users },
@@ -237,13 +240,18 @@ export default function Dashboard() {
             </>
           )}
 
+          {/* Calendar Tab */}
+          {activeTab === 'calendar' && (
+            <SimpleCalendar />
+          )}
+
           {/* Orders Tab */}
           {activeTab === 'orders' && (
             <OrderManagement />
           )}
 
           {/* Other tabs content */}
-          {activeTab !== 'dashboard' && activeTab !== 'orders' && (
+          {activeTab !== 'dashboard' && activeTab !== 'calendar' && activeTab !== 'orders' && (
             <Card>
               <CardHeader>
                 <CardTitle>
