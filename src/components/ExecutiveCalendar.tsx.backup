@@ -1,14 +1,4 @@
 'use client'
-import { serverLog } from "@/lib/server-logger";
-console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-console.log("🔍 DEBUG: Grid layout classes:", "grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden");
-console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().toISOString());
-serverLog("🔍 DEBUG: ExecutiveCalendar component rendered at: " + new Date().toISOString());
-console.log("🔍 DEBUG: Current week:", currentWeek);
-console.log("🔍 DEBUG: Meetings count:", meetings.length);
-console.log("🔍 DEBUG: Main calendar classes:", "lg:col-span-3 bg-white rounded-lg shadow");
-console.log("🔍 DEBUG: Small calendar classes:", "lg:col-span-1");
 
 import { useState, useEffect } from 'react'
 import { Calendar } from '@/components/ui/calendar'
@@ -109,12 +99,6 @@ export default function ExecutiveCalendar() {
 
   // Load meetings from localStorage on component mount
   useEffect(() => {
-  // Debug logging for terminal visibility
-  useEffect(() => {
-    console.log("🚀 EXECUTIVE CALENDAR MOUNTED - Server should see this in terminal");
-    console.log("�� Current meetings:", meetings.length);
-    console.log("📅 Current week:", currentWeek.toDateString());
-  }, [meetings, currentWeek]);
     const savedMeetings = localStorage.getItem('executiveMeetings')
     if (savedMeetings) {
       const parsedMeetings = JSON.parse(savedMeetings).map((meeting: any) => ({
@@ -131,12 +115,6 @@ export default function ExecutiveCalendar() {
 
   // Save meetings to localStorage whenever meetings change
   useEffect(() => {
-  // Debug logging for terminal visibility
-  useEffect(() => {
-    console.log("🚀 EXECUTIVE CALENDAR MOUNTED - Server should see this in terminal");
-    console.log("�� Current meetings:", meetings.length);
-    console.log("📅 Current week:", currentWeek.toDateString());
-  }, [meetings, currentWeek]);
     if (meetings.length > 0) {
       localStorage.setItem('executiveMeetings', JSON.stringify(meetings))
     }
@@ -447,9 +425,9 @@ export default function ExecutiveCalendar() {
       </div>
 
       {/* La Jaula Style Calendar */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Calendar */}
-        <div className="lg:col-span-3 bg-white rounded-lg shadow">
+        <div className="flex-1 lg:w-3/4 bg-white rounded-lg shadow">
           {/* Header */}
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
@@ -519,19 +497,19 @@ export default function ExecutiveCalendar() {
                   onClick={() => handleNavigation('today')}
                   className="px-3 py-1 text-xs font-medium rounded border border-gray-300 hover:bg-gray-50"
                 >
-                  Today
+                  Hoy
                 </button>
                 <button 
                   onClick={() => handleNavigation('prev')}
                   className="px-3 py-1 text-xs font-medium rounded border border-gray-300 hover:bg-gray-50"
                 >
-                  Previous
+                  Anterior
                 </button>
                 <button 
                   onClick={() => handleNavigation('next')}
                   className="px-3 py-1 text-xs font-medium rounded border border-gray-300 hover:bg-gray-50"
                 >
-                  Next
+                  Siguiente
                 </button>
                 <span className="text-sm text-gray-600 ml-4">
                   {format(getWeekDates(currentWeek)[0], 'MMMM d')} - {format(getWeekDates(currentWeek)[6], 'MMMM d, yyyy')}
@@ -546,7 +524,7 @@ export default function ExecutiveCalendar() {
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Day
+                  Día
                 </button>
                 <button 
                   onClick={() => setViewMode('week')}
@@ -556,7 +534,7 @@ export default function ExecutiveCalendar() {
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Week
+                  Semana
                 </button>
                 <button 
                   onClick={() => setViewMode('month')}
@@ -566,7 +544,7 @@ export default function ExecutiveCalendar() {
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Month
+                  Mes
                 </button>
                 <button 
                   onClick={() => setViewMode('agenda')}
@@ -586,7 +564,7 @@ export default function ExecutiveCalendar() {
           <div className="overflow-hidden">
             {/* Days Header */}
             <div className="grid grid-cols-8 bg-gray-50 border-b">
-              <div className="p-3 text-xs font-medium text-gray-600 border-r text-center">Time</div>
+              <div className="p-3 text-xs font-medium text-gray-600 border-r text-center">Hora</div>
               {getWeekDates(currentWeek).map((date, index) => (
                 <div 
                   key={index} 
@@ -627,7 +605,7 @@ export default function ExecutiveCalendar() {
                         return (
                           <div 
                             key={idx} 
-                            className={`absolute left-1 right-1 top-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)}`}
+                            className={`absolute inset-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)}`}
                             style={{ height: `${height - 8}px` }}
                             onClick={(e) => {
                               e.stopPropagation()
@@ -648,7 +626,7 @@ export default function ExecutiveCalendar() {
         </div>
 
         {/* Small Calendar Widget */}
-        <div className="lg:col-span-1">
+        <div className="w-full lg:w-1/4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-center mb-4">
               <h3 className="text-sm font-semibold text-gray-900">
@@ -668,7 +646,7 @@ export default function ExecutiveCalendar() {
                   viewMode === 'day' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
                 }`}
               >
-                Day
+                Día
               </button>
               <button 
                 onClick={() => setViewMode('week')}
@@ -676,7 +654,7 @@ export default function ExecutiveCalendar() {
                   viewMode === 'week' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
                 }`}
               >
-                Week
+                Semana
               </button>
               <button 
                 onClick={() => setViewMode('month')}
@@ -684,7 +662,7 @@ export default function ExecutiveCalendar() {
                   viewMode === 'month' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
                 }`}
               >
-                Month
+                Mes
               </button>
               <button 
                 onClick={() => setViewMode('agenda')}
