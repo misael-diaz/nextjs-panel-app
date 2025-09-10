@@ -3,8 +3,6 @@ import { serverLog } from "@/lib/server-logger";
 console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 console.log("🔍 DEBUG: Layout classes:", "flex flex-col lg:flex-row gap-6 max-w-full - FINAL LAYOUT");
-console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().toISOString());
-serverLog("🔍 DEBUG: ExecutiveCalendar component rendered at: " + new Date().toISOString());
 
 import { useState, useEffect } from 'react'
 import { Calendar as CalendarIcon } from 'lucide-react'
@@ -100,6 +98,7 @@ export default function ExecutiveCalendar() {
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null)
   
+  const todayString = new Date().toDateString()
   // Load meetings from localStorage on component mount
   useEffect(() => {
     console.log("🔍 DEBUG: localStorage useEffect running...")
@@ -919,7 +918,7 @@ export default function ExecutiveCalendar() {
                 <div 
                   key={index} 
                   className={`p-3 text-xs font-medium text-gray-600 border-r text-center ${
-                    date.toDateString() === new Date().toDateString() ? 'bg-blue-50' : ''
+                    date.toDateString() === todayString ? 'bg-blue-50' : ''
                   }`}
                 >
                   {format(date, 'EEE')}
@@ -965,7 +964,7 @@ export default function ExecutiveCalendar() {
                     <div 
                       key={dayIndex}
                       className={`p-1 border-r min-h-[60px] hover:bg-gray-50 cursor-pointer relative ${
-                        date.toDateString() === new Date().toDateString() ? 'bg-blue-50' : ''
+                        date.toDateString() === todayString ? 'bg-blue-50' : ''
                       }`}
                       onClick={() => handleTimeSlotClick(dayIndex, hour)}
                     >
