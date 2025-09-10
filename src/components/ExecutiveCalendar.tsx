@@ -108,15 +108,6 @@ export default function ExecutiveCalendar() {
   
   // Debug logging inside component where variables are available
   useEffect(() => {
-  
-  // Debug layout information
-  useEffect(() => {
-    console.log("🔍 DEBUG: Layout structure:");
-    console.log("  - Main container: flex flex-col lg:flex-row gap-6 max-w-full");
-    console.log("  - Main calendar: flex-1 lg:w-3/4 bg-white rounded-lg shadow");
-    console.log("  - Small calendar: w-full lg:w-1/4");
-    serverLog("🔍 DEBUG: Layout structure - Main: lg:col-span-3, Small: w-full lg:w-1/4");
-  }, []);
     console.log("🔍 DEBUG: Current week:", currentWeek);
     console.log("🔍 DEBUG: Meetings count:", meetings.length);
     serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
@@ -131,7 +122,6 @@ export default function ExecutiveCalendar() {
     } else {
       // Initialize with mock data if no saved data exists
       setMeetings(mockMeetings)
-      localStorage.setItem('executiveMeetings', JSON.stringify(mockMeetings))
     }
   }, [])
 
