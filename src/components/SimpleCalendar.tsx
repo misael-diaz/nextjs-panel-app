@@ -309,13 +309,21 @@ export default function SimpleCalendar() {
     if (!isResizing || !draggedEvent || !resizeHandle) return
 
     const deltaY = event.clientY - resizeStartY
-    const deltaMinutes = Math.round(deltaY / 60 * 60) // Convert pixels to minutes (60px = 60 minutes)
+    const deltaMinutes = Math.round(deltaY) // 1 pixel = 1 minute
     
     let newDuration = resizeStartDuration
     
     if (resizeHandle === 'bottom') {
-      // Resizing from bottom - extend/contract duration
+      // Resizing from bottom - extend/contract duration only
       newDuration = Math.max(15, resizeStartDuration + deltaMinutes) // Minimum 15 minutes
+      
+      // Update only the duration, keep start time the same
+      const updatedEvent = {
+        ...draggedEvent,
+        duration: newDuration
+      }
+      setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
+      
     } else if (resizeHandle === 'top') {
       // Resizing from top - adjust start time and duration
       const [hours, minutes] = draggedEvent.time.split(':').map(Number)
@@ -326,22 +334,14 @@ export default function SimpleCalendar() {
       const durationChange = startMinutes - newStartMinutes
       newDuration = Math.max(15, resizeStartDuration + durationChange)
       
-      // Update the event with new start time
+      // Update the event with new start time and duration
       const updatedEvent = {
         ...draggedEvent,
         time: newStartTime,
         duration: newDuration
       }
       setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
-      return
     }
-    
-    // Update duration for bottom resize
-    const updatedEvent = {
-      ...draggedEvent,
-      duration: newDuration
-    }
-    setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
   }
 
   const calculateDropTime = (relativeY: number) => {
@@ -688,19 +688,24 @@ export default function SimpleCalendar() {
                           >
                             {/* Top resize handle */}
                             <div
-                              className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-black hover:bg-opacity-20 transition-colors"
+                              className="absolute top-0 left-0 right-0 h-3 cursor-ns-resize hover:bg-black hover:bg-opacity-30 transition-colors border-t border-black border-opacity-20"
                               onMouseDown={(e) => handleResizeStart(e, event, 'top')}
                             />
                             
                             {/* Event content */}
-                            <div className="p-1 text-xs font-medium truncate select-none">
+                            <div className="p-1 text-xs font-medium truncate select-none mt-3 mb-3">
                               {event.time} - {event.title}
                               {hasTooManyOverlaps && ' ⚠️'}
+                              {isResizing && draggedEvent?.id === event.id && (
+                                <div className="text-xs opacity-75">
+                                  ({event.duration}min)
+                                </div>
+                              )}
                             </div>
                             
                             {/* Bottom resize handle */}
                             <div
-                              className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-black hover:bg-opacity-20 transition-colors"
+                              className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize hover:bg-black hover:bg-opacity-30 transition-colors border-b border-black border-opacity-20"
                               onMouseDown={(e) => handleResizeStart(e, event, 'bottom')}
                             />
                           </div>
