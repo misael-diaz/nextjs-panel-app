@@ -359,6 +359,20 @@ export default function ExecutiveCalendar() {
   }
 
   const handleCreateMeeting = () => {
+  const handleAddMockMeetings = () => {
+    console.log("🔧 DEBUG: Adding mock meetings to localStorage")
+    serverLog("🔧 DEBUG: Adding mock meetings to localStorage")
+    
+    const existingMeetings = meetings
+    const existingIds = new Set(existingMeetings.map(m => m.id))
+    const newMockMeetings = mockMeetings.filter(mock => !existingIds.has(mock.id))
+    const allMeetings = [...existingMeetings, ...newMockMeetings]
+    
+    setMeetings(allMeetings)
+    console.log("🔧 DEBUG: Added", newMockMeetings.length, "mock meetings. Total:", allMeetings.length)
+    serverLog("🔧 DEBUG: Added " + newMockMeetings.length + " mock meetings. Total: " + allMeetings.length)
+  }
+
     console.log("🚀 DEBUG: Starting handleCreateMeeting")
     serverLog("🚀 DEBUG: Starting handleCreateMeeting")
     
@@ -612,6 +626,11 @@ export default function ExecutiveCalendar() {
               Schedule Meeting
             </Button>
           </DialogTrigger>
+          </DialogTrigger>
+          <Button onClick={handleAddMockMeetings} variant="outline" className="ml-2">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Mock Meetings
+          </Button>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{editingMeeting ? 'Edit Meeting' : 'Schedule New Meeting'}</DialogTitle>
