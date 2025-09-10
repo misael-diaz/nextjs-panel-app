@@ -2,7 +2,7 @@
 import { serverLog } from "@/lib/server-logger";
 console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-console.log("🔍 DEBUG: Layout classes:", "w-full (small calendar removed)");
+console.log("🔍 DEBUG: Layout classes:", "flex flex-col lg:flex-row gap-6 max-w-full");
 console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().toISOString());
 serverLog("🔍 DEBUG: ExecutiveCalendar component rendered at: " + new Date().toISOString());
 
@@ -115,19 +115,21 @@ export default function ExecutiveCalendar() {
     
     // Layout debugging
     console.log("🔍 DEBUG: Layout structure analysis:");
-    console.log("  - Main container: w-full (small calendar removed)");
-    console.log("  - Main calendar: w-full bg-white rounded-lg shadow");
-    serverLog("🔍 DEBUG: Layout classes - Main: w-full (small calendar removed)");
+    console.log("  - Main container: flex flex-col lg:flex-row gap-6 max-w-full");
+    console.log("  - Main calendar: flex-1 lg:w-3/4 bg-white rounded-lg shadow");
+    console.log("  - Small calendar: w-full lg:w-1/4");
+    serverLog("🔍 DEBUG: Layout classes - Main: flex-1 lg:w-3/4, Small: w-full lg:w-1/4");
     
     // Check if elements exist in DOM
     setTimeout(() => {
-      const mainContainer = document.querySelector('.w-full');
-      const mainCalendar = document.querySelector('.w-full.bg-white.rounded-lg.shadow');
+      const mainContainer = document.querySelector('.flex.flex-col.lg\\:flex-row');
+      const mainCalendar = document.querySelector('.flex-1.lg\\:w-3\\/4');
+      const smallCalendar = document.querySelector('.w-full.lg\\:w-1\\/4');
       
       console.log("🔍 DEBUG: DOM elements found:");
       console.log("  - Main container:", mainContainer ? "✅ Found" : "❌ Not found");
       console.log("  - Main calendar:", mainCalendar ? "✅ Found" : "❌ Not found");
-      console.log("  - Small calendar: ❌ Removed (no longer needed)");
+      console.log("  - Small calendar:", smallCalendar ? "✅ Found" : "❌ Not found");
       
       if (mainContainer) {
         const computedStyle = window.getComputedStyle(mainContainer);
@@ -139,22 +141,25 @@ export default function ExecutiveCalendar() {
         serverLog("🔍 DEBUG: Container styles - display: " + computedStyle.display + ", flex-direction: " + computedStyle.flexDirection);
       }
       
-      if (mainCalendar) {
+      if (mainCalendar && smallCalendar) {
         const mainRect = mainCalendar.getBoundingClientRect();
+        const smallRect = smallCalendar.getBoundingClientRect();
         const mainStyle = window.getComputedStyle(mainCalendar);
+        const smallStyle = window.getComputedStyle(smallCalendar);
         
         console.log("🔍 DEBUG: Element positions:");
         console.log("  - Main calendar:", mainRect);
-        console.log("  - Small calendar: ❌ Removed (no overlap possible)");
-        console.log("  - Overlap check: ✅ No overlap (small calendar removed)");
+        console.log("  - Small calendar:", smallRect);
+        console.log("  - Overlap check:", mainRect.right > smallRect.left ? "⚠️ OVERLAPPING" : "✅ No overlap");
         
         console.log("🔍 DEBUG: Element styles:");
         console.log("  - Main z-index:", mainStyle.zIndex, "position:", mainStyle.position);
-        console.log("  - Main width:", mainStyle.width);
+        console.log("  - Small z-index:", smallStyle.zIndex, "position:", smallStyle.position);
+        console.log("  - Main width:", mainStyle.width, "Small width:", smallStyle.width);
         
-        serverLog("🔍 DEBUG: Overlap check - No overlap (small calendar removed)");
-        serverLog("🔍 DEBUG: Z-index - Main: " + mainStyle.zIndex);
-        serverLog("🔍 DEBUG: Position - Main: " + mainStyle.position);
+        serverLog("🔍 DEBUG: Overlap check - Main right: " + mainRect.right + ", Small left: " + smallRect.left);
+        serverLog("🔍 DEBUG: Z-index - Main: " + mainStyle.zIndex + ", Small: " + smallStyle.zIndex);
+        serverLog("🔍 DEBUG: Position - Main: " + mainStyle.position + ", Small: " + smallStyle.position);
       }
       
       serverLog("🔍 DEBUG: DOM elements check completed");
@@ -485,9 +490,9 @@ export default function ExecutiveCalendar() {
       </div>
 
       {/* La Jaula Style Calendar */}
-      <div className="w-full">
+      <div className="flex flex-col lg:flex-row gap-6 max-w-full">
         {/* Main Calendar */}
-        <div className="w-full bg-white rounded-lg shadow">
+        <div className="flex-1 lg:w-3/4 bg-white rounded-lg shadow">
           {/* Header */}
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
@@ -685,6 +690,56 @@ export default function ExecutiveCalendar() {
           </div>
         </div>
 
+        {/* Small Calendar Widget */}
+        <div className="w-full lg:w-1/4">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-center mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">
+                {format(currentWeek, 'MMMM yyyy')}
+              </h3>
+            </div>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="w-full"
+            />
+            <div className="mt-4 space-y-2">
+              <button 
+                onClick={() => setViewMode('day')}
+                className={`w-full px-3 py-1 text-xs font-medium rounded border ${
+                  viewMode === 'day' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
+                }`}
+              >
+                Day
+              </button>
+              <button 
+                onClick={() => setViewMode('week')}
+                className={`w-full px-3 py-1 text-xs font-medium rounded border ${
+                  viewMode === 'week' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
+                }`}
+              >
+                Week
+              </button>
+              <button 
+                onClick={() => setViewMode('month')}
+                className={`w-full px-3 py-1 text-xs font-medium rounded border ${
+                  viewMode === 'month' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
+                }`}
+              >
+                Month
+              </button>
+              <button 
+                onClick={() => setViewMode('agenda')}
+                className={`w-full px-3 py-1 text-xs font-medium rounded border ${
+                  viewMode === 'agenda' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
+                }`}
+              >
+                Agenda
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
