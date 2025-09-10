@@ -148,6 +148,9 @@ export default function ExecutiveCalendar() {
       serverLog("📅 No meetings found in localStorage")
     }
   }, [])
+  useEffect(() => {
+    if (meetings.length > 0) {
+      localStorage.setItem("executive-meetings", JSON.stringify(meetings))
       console.log("💾 Saved meetings to localStorage:", meetings.length)
       serverLog("💾 Saved meetings to localStorage: " + meetings.length)
     }
