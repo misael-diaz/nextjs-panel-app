@@ -91,6 +91,35 @@ export default function ExecutiveCalendar() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{day: number, hour: number} | null>(null)
   const [meetings, setMeetings] = useState<Meeting[]>([])
+  const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null)
+  
+  // Load meetings from localStorage on component mount
+  useEffect(() => {
+    const savedMeetings = localStorage.getItem('executive-meetings')
+    if (savedMeetings) {
+      try {
+        const parsedMeetings = JSON.parse(savedMeetings).map((meeting: any) => ({
+          ...meeting,
+          date: new Date(meeting.date)
+        }))
+        setMeetings(parsedMeetings)
+        console.log("📅 Loaded meetings from localStorage:", parsedMeetings.length)
+        serverLog("📅 Loaded meetings from localStorage: " + parsedMeetings.length)
+      } catch (error) {
+        console.error("Error loading meetings from localStorage:", error)
+        serverLog("Error loading meetings from localStorage: " + error)
+      }
+    }
+  }, [])
+  
+  // Save meetings to localStorage whenever meetings change
+  useEffect(() => {
+    if (meetings.length > 0) {
+      localStorage.setItem('executive-meetings', JSON.stringify(meetings))
+      console.log("💾 Saved meetings to localStorage:", meetings.length)
+      serverLog("💾 Saved meetings to localStorage: " + meetings.length)
+    }
+  }, [meetings])
   
   // Debug logging inside component where variables are available
   const [newMeeting, setNewMeeting] = useState({
@@ -300,25 +329,124 @@ export default function ExecutiveCalendar() {
   }
 
   const handleCreateMeeting = () => {
-    if (!newMeeting.title || !newMeeting.date || !newMeeting.time) {
-      alert('Please fill in all required fields')
+    // Enhanced validation
+    if (!newMeeting.title.trim()) {
+      alert('Please enter a meeting title')
+      return
+    }
+    if (!newMeeting.date) {
+      alert('Please select a date')
+      return
+    }
+    if (!newMeeting.time) {
+      alert('Please select a time')
+      return
+    }
+
+    const meetingDate = new Date(newMeeting.date)
+    const now = new Date()
+    
+    // Check if meeting is in the past
+    if (meetingDate < now) {
+      alert('Cannot schedule meetings in the past')
       return
     }
 
     const meeting: Meeting = {
       id: Date.now().toString(),
-      title: newMeeting.title,
-      date: new Date(newMeeting.date),
+      title: newMeeting.title.trim(),
+      date: meetingDate,
       time: newMeeting.time,
       duration: newMeeting.duration,
       attendees: newMeeting.attendees.split(',').map(a => a.trim()).filter(a => a),
-      location: newMeeting.location,
+      location: newMeeting.location.trim(),
       type: newMeeting.type,
       priority: newMeeting.priority,
-      description: newMeeting.description
+      description: newMeeting.description.trim()
     }
 
     setMeetings(prev => [...prev, meeting])
+    
+    // Reset form
+    setNewMeeting({
+      title: '',
+      date: '',
+      time: '',
+      duration: '1 hour',
+      attendees: '',
+      location: '',
+      type: 'internal',
+      priority: 'medium',
+      description: ''
+    })
+    
+    setIsDialogOpen(false)
+    
+    // Success notification
+    console.log("✅ Meeting scheduled successfully:", meeting.title)
+    serverLog("✅ Meeting scheduled successfully: " + meeting.title)
+    alert(`Meeting "${meeting.title}" scheduled successfully!`)
+  }
+
+  const handleEditMeeting = (meeting: Meeting) => {
+    setEditingMeeting(meeting)
+    setNewMeeting({
+      title: meeting.title,
+      date: meeting.date.toISOString().split('T')[0],
+      time: meeting.time,
+      duration: meeting.duration,
+      attendees: meeting.attendees.join(', '),
+      location: meeting.location,
+      type: meeting.type,
+      priority: meeting.priority,
+      description: meeting.description
+    })
+    setIsDialogOpen(true)
+  }
+
+  const handleUpdateMeeting = () => {
+    if (!editingMeeting) return
+
+    // Enhanced validation
+    if (!newMeeting.title.trim()) {
+      alert('Please enter a meeting title')
+      return
+    }
+    if (!newMeeting.date) {
+      alert('Please select a date')
+      return
+    }
+    if (!newMeeting.time) {
+      alert('Please select a time')
+      return
+    }
+
+    const meetingDate = new Date(newMeeting.date)
+    const now = new Date()
+    
+    // Check if meeting is in the past
+    if (meetingDate < now) {
+      alert('Cannot schedule meetings in the past')
+      return
+    }
+
+    const updatedMeeting: Meeting = {
+      ...editingMeeting,
+      title: newMeeting.title.trim(),
+      date: meetingDate,
+      time: newMeeting.time,
+      duration: newMeeting.duration,
+      attendees: newMeeting.attendees.split(',').map(a => a.trim()).filter(a => a),
+      location: newMeeting.location.trim(),
+      type: newMeeting.type,
+      priority: newMeeting.priority,
+      description: newMeeting.description.trim()
+    }
+
+    setMeetings(prev => prev.map(m => m.id === editingMeeting.id ? updatedMeeting : m))
+    
+    // Reset form and close dialog
+    setEditingMeeting(null)
     setNewMeeting({
       title: '',
       date: '',
@@ -331,6 +459,19 @@ export default function ExecutiveCalendar() {
       description: ''
     })
     setIsDialogOpen(false)
+    
+    console.log("✅ Meeting updated successfully:", updatedMeeting.title)
+    serverLog("✅ Meeting updated successfully: " + updatedMeeting.title)
+    alert(`Meeting "${updatedMeeting.title}" updated successfully!`)
+  }
+
+  const handleDeleteMeeting = (meetingId: string) => {
+    if (confirm('Are you sure you want to delete this meeting?')) {
+      setMeetings(prev => prev.filter(m => m.id !== meetingId))
+      console.log("🗑️ Meeting deleted:", meetingId)
+      serverLog("🗑️ Meeting deleted: " + meetingId)
+      alert('Meeting deleted successfully!')
+    }
   }
 
   return (
@@ -350,9 +491,9 @@ export default function ExecutiveCalendar() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Schedule New Meeting</DialogTitle>
+              <DialogTitle>{editingMeeting ? 'Edit Meeting' : 'Schedule New Meeting'}</DialogTitle>
               <DialogDescription>
-                Add a new meeting to the executive calendar.
+                {editingMeeting ? 'Update the meeting details.' : 'Add a new meeting to the executive calendar.'}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -478,11 +619,25 @@ export default function ExecutiveCalendar() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button variant="outline" onClick={() => {
+                setIsDialogOpen(false)
+                setEditingMeeting(null)
+                setNewMeeting({
+                  title: '',
+                  date: '',
+                  time: '',
+                  duration: '1 hour',
+                  attendees: '',
+                  location: '',
+                  type: 'internal',
+                  priority: 'medium',
+                  description: ''
+                })
+              }}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateMeeting}>
-                Schedule Meeting
+              <Button onClick={editingMeeting ? handleUpdateMeeting : handleCreateMeeting}>
+                {editingMeeting ? 'Update Meeting' : 'Schedule Meeting'}
               </Button>
             </div>
           </DialogContent>
@@ -670,15 +825,40 @@ export default function ExecutiveCalendar() {
                         return (
                           <div 
                             key={idx} 
-                            className={`absolute left-1 right-1 top-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)}`}
+                            className={`absolute left-1 right-1 top-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)} group hover:shadow-md transition-shadow`}
                             style={{ height: `${height - 8}px` }}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              // Handle meeting click for details
-                            }}
                           >
-                            <div className="font-medium truncate">{meeting.title}</div>
-                            <div className="text-xs opacity-75">{meeting.time} - {meeting.location}</div>
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1 min-w-0" onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditMeeting(meeting)
+                              }}>
+                                <div className="font-medium truncate cursor-pointer hover:text-blue-600">{meeting.title}</div>
+                                <div className="text-xs opacity-75">{meeting.time} - {meeting.location}</div>
+                              </div>
+                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEditMeeting(meeting)
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 text-xs px-1"
+                                  title="Edit meeting"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteMeeting(meeting.id)
+                                  }}
+                                  className="text-red-600 hover:text-red-800 text-xs px-1"
+                                  title="Delete meeting"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         )
                       })}
