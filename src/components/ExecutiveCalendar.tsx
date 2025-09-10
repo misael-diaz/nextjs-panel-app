@@ -112,15 +112,6 @@ export default function ExecutiveCalendar() {
     console.log("🔍 DEBUG: Meetings count:", meetings.length);
     serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
     serverLog("🔍 DEBUG: Meetings count: " + meetings.length);
-  }, [currentWeek, meetings]);
-  // Load meetings from localStorage on component mount
-  useEffect(() => {
-  // Debug logging for terminal visibility
-  useEffect(() => {
-    console.log("🚀 EXECUTIVE CALENDAR MOUNTED - Server should see this in terminal");
-    console.log("�� Current meetings:", meetings.length);
-    console.log("📅 Current week:", currentWeek.toDateString());
-  }, [meetings, currentWeek]);
     const savedMeetings = localStorage.getItem('executiveMeetings')
     if (savedMeetings) {
       const parsedMeetings = JSON.parse(savedMeetings).map((meeting: any) => ({
@@ -136,13 +127,6 @@ export default function ExecutiveCalendar() {
   }, [])
 
   // Save meetings to localStorage whenever meetings change
-  useEffect(() => {
-  // Debug logging for terminal visibility
-  useEffect(() => {
-    console.log("🚀 EXECUTIVE CALENDAR MOUNTED - Server should see this in terminal");
-    console.log("�� Current meetings:", meetings.length);
-    console.log("📅 Current week:", currentWeek.toDateString());
-  }, [meetings, currentWeek]);
     if (meetings.length > 0) {
       localStorage.setItem('executiveMeetings', JSON.stringify(meetings))
     }
