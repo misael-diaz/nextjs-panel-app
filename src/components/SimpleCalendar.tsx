@@ -89,6 +89,37 @@ export default function SimpleCalendar() {
     return events.filter(event => isSameDay(event.date, date))
   }
 
+  // Calculate event position and height based on time and duration
+  const getEventStyle = (event: Event) => {
+    const [hours, minutes] = event.time.split(':').map(Number)
+    const startMinutes = hours * 60 + minutes
+    const duration = event.duration || 60
+    
+    // Each hour slot is 60px, so each minute is 1px
+    const topOffset = startMinutes - (6 * 60) // Subtract 6 AM offset
+    const height = duration
+    
+    return {
+      top: `${Math.max(0, topOffset)}px`,
+      height: `${height}px`,
+      minHeight: '20px' // Minimum height for visibility
+    }
+  }
+
+  // Get events that should be displayed in a specific time slot
+  const getEventsForTimeSlot = (date: Date, timeSlot: { hour: number; time: string }) => {
+    return getEventsForDate(date).filter(event => {
+      const [eventHours, eventMinutes] = event.time.split(':').map(Number)
+      const eventStartMinutes = eventHours * 60 + eventMinutes
+      const eventEndMinutes = eventStartMinutes + (event.duration || 60)
+      const slotStartMinutes = timeSlot.hour * 60
+      const slotEndMinutes = slotStartMinutes + 60
+      
+      // Event overlaps with this time slot
+      return eventStartMinutes < slotEndMinutes && eventEndMinutes > slotStartMinutes
+    })
+  }
+
   const handleDateClick = (date: Date) => {
     setSelectedDate(date)
     setShowEventForm(true)
@@ -114,7 +145,7 @@ export default function SimpleCalendar() {
       ...eventData,
       id: Date.now().toString(),
       color: randomColor,
-      duration: 60 // Default 1 hour
+      duration: eventData.duration || 60 // Default 1 hour
     }
     setEvents([...events, newEvent])
     setShowEventForm(false)
@@ -275,7 +306,7 @@ export default function SimpleCalendar() {
             </div>
           </div>
         ) : (
-          /* Week View - Google Calendar Style */
+          /* Week View - Google Calendar Style with Event Positioning */
           <div className="h-full flex flex-col">
             {/* Day headers */}
             <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
@@ -300,50 +331,66 @@ export default function SimpleCalendar() {
               })}
             </div>
             
-            {/* Time slots */}
+            {/* Calendar Grid with Events */}
             <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-8">
-                {timeSlots.map(timeSlot => (
-                  <React.Fragment key={timeSlot.hour}>
-                    {/* Time label */}
-                    <div className="p-2 text-right text-xs text-gray-500 border-r border-b border-gray-200 bg-gray-50">
+              <div className="grid grid-cols-8 relative">
+                {/* Time labels column */}
+                <div className="border-r border-gray-200 bg-gray-50">
+                  {timeSlots.map(timeSlot => (
+                    <div
+                      key={timeSlot.hour}
+                      className="h-[60px] p-2 text-right text-xs text-gray-500 border-b border-gray-200 flex items-start justify-end"
+                    >
                       {timeSlot.label}
                     </div>
-                    
-                    {/* Day columns */}
-                    {weekDays.map(day => {
-                      const dayEvents = getEventsForDate(day).filter(event => 
-                        event.time.startsWith(timeSlot.time.substring(0, 2))
-                      )
-                      const isToday = isSameDay(day, new Date())
-                      
-                      return (
+                  ))}
+                </div>
+                
+                {/* Day columns with events */}
+                {weekDays.map(day => {
+                  const isToday = isSameDay(day, new Date())
+                  const dayEvents = getEventsForDate(day)
+                  
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={`relative border-r border-gray-200 last:border-r-0 ${
+                        isToday ? 'bg-blue-25' : 'bg-white'
+                      }`}
+                    >
+                      {/* Time slot grid lines */}
+                      {timeSlots.map(timeSlot => (
                         <div
-                          key={`${day.toISOString()}-${timeSlot.hour}`}
-                          className={`
-                            min-h-[60px] p-1 border-r border-b border-gray-200 cursor-pointer hover:bg-blue-50
-                            ${isToday ? 'bg-blue-25' : 'bg-white'}
-                            last:border-r-0
-                          `}
+                          key={timeSlot.hour}
+                          className="h-[60px] border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                           onClick={() => handleTimeSlotClick(day, timeSlot.time)}
-                        >
-                          {/* Events for this time slot */}
-                          {dayEvents.map(event => {
-                            const colorClass = event.color ? eventColors[event.color] : eventColors.blue
-                            return (
-                              <div
-                                key={event.id}
-                                className={`text-xs ${colorClass.bg} ${colorClass.text} px-2 py-1 rounded-sm mb-1 truncate border-l-2 ${colorClass.border} font-medium`}
-                              >
-                                {event.title}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )
-                    })}
-                  </React.Fragment>
-                ))}
+                        />
+                      ))}
+                      
+                      {/* Events positioned absolutely */}
+                      {dayEvents.map(event => {
+                        const colorClass = event.color ? eventColors[event.color] : eventColors.blue
+                        const eventStyle = getEventStyle(event)
+                        
+                        return (
+                          <div
+                            key={event.id}
+                            className={`absolute left-1 right-1 ${colorClass.bg} ${colorClass.text} rounded-sm border-l-2 ${colorClass.border} cursor-pointer hover:opacity-80 transition-opacity`}
+                            style={eventStyle}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              // Could add event editing here
+                            }}
+                          >
+                            <div className="p-1 text-xs font-medium truncate">
+                              {event.time} - {event.title}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -381,6 +428,7 @@ function EventForm({
   const [title, setTitle] = useState('')
   const [time, setTime] = useState(selectedTime || format(selectedDate, 'HH:mm'))
   const [description, setDescription] = useState('')
+  const [duration, setDuration] = useState(60) // Default 1 hour
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -389,9 +437,10 @@ function EventForm({
         title: title.trim(),
         date: selectedDate,
         time,
-        description: description.trim() || undefined
+        description: description.trim() || undefined,
+        duration
       })
-      serverLog(`Calendar: Event form submitted for "${title.trim()}" on ${format(selectedDate, 'MMMM d, yyyy')}`, 'info')
+      serverLog(`Calendar: Event form submitted for "${title.trim()}" on ${format(selectedDate, 'MMMM d, yyyy')} for ${duration} minutes`, 'info')
     } else {
       serverLog('Calendar: Event form submitted with empty title - validation failed', 'warn')
     }
@@ -430,17 +479,38 @@ function EventForm({
             />
           </div>
           
-          {/* Time */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Time
-            </label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          {/* Time and Duration */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Start Time
+              </label>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Duration
+              </label>
+              <select
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={60}>1 hour</option>
+                <option value={90}>1.5 hours</option>
+                <option value={120}>2 hours</option>
+                <option value={180}>3 hours</option>
+                <option value={240}>4 hours</option>
+                <option value={480}>8 hours</option>
+              </select>
+            </div>
           </div>
           
           {/* Description */}
