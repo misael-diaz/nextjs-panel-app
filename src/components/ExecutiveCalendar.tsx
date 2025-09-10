@@ -182,7 +182,6 @@ const getTypeColor = (type: string) => {
 if (priority === 'high') return <AlertCircle className="w-4 h-4 text-red-500" />
     return null
   }
-
   const selectedDateMeetings = selectedDate ? getMeetingsForDate(selectedDate) : []
 
   const getMeetingsForTimeSlot = (dayIndex: number, hour: number) => {
@@ -231,7 +230,6 @@ if (priority === 'high') return <AlertCircle className="w-4 h-4 text-red-500" />
     console.log("🖱️ DEBUG: Time slot clicked")
     serverLog("🖱️ DEBUG: Time slot clicked")
     
-    const weekDates = getWeekDates(currentWeek)
     const clickedDate = weekDates[dayIndex]
     clickedDate.setHours(hour, 0, 0, 0)
     
