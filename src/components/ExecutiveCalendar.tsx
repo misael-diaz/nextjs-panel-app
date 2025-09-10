@@ -698,26 +698,6 @@ export default function ExecutiveCalendar() {
                 {format(currentWeek, 'MMMM yyyy')}
               </h3>
             </div>
-            <div className="w-full">
-              <div className="grid grid-cols-7 gap-1 text-center">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                  <div key={day} className="text-xs font-medium text-gray-500 p-1">
-                    {day}
-                  </div>
-                ))}
-                {Array.from({ length: 30 }, (_, i) => i + 1).map(day => (
-                  <button
-                    key={day}
-                    className={`text-xs p-1 rounded hover:bg-gray-100 ${
-                      day === 10 ? 'bg-blue-100 text-blue-800' : 'text-gray-700'
-                    }`}
-                    onClick={() => setSelectedDate(new Date(2025, 8, day))}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            </div>
             <div className="mt-4 space-y-2">
               <button 
                 onClick={() => setViewMode('day')}
