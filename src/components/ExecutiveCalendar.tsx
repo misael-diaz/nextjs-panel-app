@@ -124,13 +124,13 @@ export default function ExecutiveCalendar() {
         })))
         // serverLog("📅 Loaded meetings from localStorage: " + parsedMeetings.length)
         // serverLog("📅 Meeting details: " + JSON.stringify(parsedMeetings.map(m => ({
-//           title: m.title,
-//           date: m.date.toDateString(),
-//           time: m.time,
-//           duration: m.duration
-//         }))))
-//       } catch (error) {
-//         console.error("Error loading meetings from localStorage:", error)
+// //           title: m.title,
+// //           date: m.date.toDateString(),
+// //           time: m.time,
+// //           duration: m.duration
+// //         }))))
+// //       } catch (error) {
+// //         console.error("Error loading meetings from localStorage:", error)
         // serverLog("Error loading meetings from localStorage: " + error)
       }
     } else {
