@@ -78,6 +78,10 @@ export default function SimpleCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [view, setView] = useState<'month' | 'week'>('week')
   const [showOverlapWarning, setShowOverlapWarning] = useState(false)
+  const [draggedEvent, setDraggedEvent] = useState<Event | null>(null)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   // Month view calculations
   const monthStart = startOfMonth(currentDate)
@@ -244,8 +248,69 @@ export default function SimpleCalendar() {
     serverLog(`Calendar: Created new event "${eventData.title}" on ${format(eventData.date, 'MMMM d, yyyy')} at ${eventData.time}`, 'info')
   }
 
+  // Drag and drop handlers
+  const handleDragStart = (event: React.MouseEvent, eventData: Event) => {
+    event.preventDefault()
+    setDraggedEvent(eventData)
+    setIsDragging(true)
+    
+    const rect = (event.target as HTMLElement).getBoundingClientRect()
+    setDragOffset({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    })
+    
+    serverLog(`Calendar: Started dragging event "${eventData.title}"`, 'info')
+  }
+
+  const handleDragEnd = () => {
+    if (draggedEvent) {
+      setDraggedEvent(null)
+      setIsDragging(false)
+      setDragOffset({ x: 0, y: 0 })
+      serverLog(`Calendar: Finished dragging event "${draggedEvent.title}"`, 'info')
+    }
+  }
+
+  const handleDrop = (event: React.MouseEvent, targetDate: Date) => {
+    if (!draggedEvent) return
+
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+    const relativeY = event.clientY - rect.top
+    const relativeX = event.clientX - rect.left
+    
+    // Calculate time based on Y position (each hour = 60px)
+    const timeOffsetMinutes = Math.max(0, relativeY - (6 * 60)) // Subtract 6 AM offset
+    const newHour = Math.floor(timeOffsetMinutes / 60) + 6
+    const newMinute = Math.floor((timeOffsetMinutes % 60) / 15) * 15 // Round to 15-minute intervals
+    
+    // Ensure time is within bounds
+    const clampedHour = Math.max(6, Math.min(22, newHour))
+    const clampedMinute = newMinute >= 60 ? 0 : newMinute
+    
+    const newTime = `${clampedHour.toString().padStart(2, '0')}:${clampedMinute.toString().padStart(2, '0')}`
+    
+    // Update the event
+    const updatedEvent = {
+      ...draggedEvent,
+      date: targetDate,
+      time: newTime
+    }
+    
+    setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
+    
+    serverLog(`Calendar: Moved event "${draggedEvent.title}" to ${format(targetDate, 'MMMM d, yyyy')} at ${newTime}`, 'info')
+    
+    handleDragEnd()
+  }
+
   return (
-    <div className="w-full max-w-7xl mx-auto bg-white h-[calc(100vh-200px)] flex flex-col">
+    <div 
+      className="w-full max-w-7xl mx-auto bg-white h-[calc(100vh-200px)] flex flex-col"
+      onMouseUp={handleDragEnd}
+      onMouseLeave={handleDragEnd}
+      onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+    >
       {/* Google Calendar-style Header */}
       <div className="border-b border-gray-200 bg-white px-6 py-4">
         <div className="flex items-center justify-between">
@@ -447,7 +512,8 @@ export default function SimpleCalendar() {
                       key={day.toISOString()}
                       className={`relative border-r border-gray-200 last:border-r-0 ${
                         isToday ? 'bg-blue-25' : 'bg-white'
-                      }`}
+                      } ${isDragging ? 'hover:bg-blue-50' : ''}`}
+                      onMouseUp={(e) => handleDrop(e, day)}
                     >
                       {/* Time slot grid lines */}
                       {timeSlots.map(timeSlot => (
@@ -462,6 +528,7 @@ export default function SimpleCalendar() {
                       {dayEvents.map(event => {
                         const colorClass = event.color ? eventColors[event.color] : eventColors.blue
                         const eventStyle = getEventStyle(event, dayEvents)
+                        const isBeingDragged = draggedEvent?.id === event.id
                         
                         // Check if this event has more than 2 overlapping events
                         const overlappingEvents = dayEvents.filter(otherEvent => {
@@ -484,12 +551,13 @@ export default function SimpleCalendar() {
                         return (
                           <div
                             key={event.id}
-                            className={`absolute rounded-sm border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${
+                            className={`absolute rounded-sm border-l-2 cursor-move hover:opacity-80 transition-all ${
                               hasTooManyOverlaps 
                                 ? 'bg-red-100 text-red-800 border-red-200' 
                                 : `${colorClass.bg} ${colorClass.text} ${colorClass.border}`
-                            }`}
+                            } ${isBeingDragged ? 'opacity-50 scale-105 shadow-lg' : ''}`}
                             style={eventStyle}
+                            onMouseDown={(e) => handleDragStart(e, event)}
                             onClick={(e) => {
                               e.stopPropagation()
                               if (hasTooManyOverlaps) {
@@ -499,7 +567,7 @@ export default function SimpleCalendar() {
                               // Could add event editing here
                             }}
                           >
-                            <div className="p-1 text-xs font-medium truncate">
+                            <div className="p-1 text-xs font-medium truncate select-none">
                               {event.time} - {event.title}
                               {hasTooManyOverlaps && ' ⚠️'}
                             </div>
@@ -565,6 +633,23 @@ export default function SimpleCalendar() {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Dragging Ghost Event */}
+      {isDragging && draggedEvent && (
+        <div
+          className={`fixed pointer-events-none z-50 rounded-sm border-l-2 shadow-lg p-1 text-xs font-medium truncate select-none ${
+            draggedEvent.color ? eventColors[draggedEvent.color].bg + ' ' + eventColors[draggedEvent.color].text + ' ' + eventColors[draggedEvent.color].border : 'bg-blue-100 text-blue-800 border-blue-200'
+          }`}
+          style={{
+            left: mousePosition.x - dragOffset.x,
+            top: mousePosition.y - dragOffset.y,
+            minWidth: '120px',
+            opacity: 0.8
+          }}
+        >
+          {draggedEvent.time} - {draggedEvent.title}
         </div>
       )}
     </div>
