@@ -1,6 +1,9 @@
 'use client'
 console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 console.log("🔍 DEBUG: Grid layout classes:", "grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden");
+console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().toISOString());
+console.log("🔍 DEBUG: Current week:", currentWeek);
+console.log("🔍 DEBUG: Meetings count:", meetings.length);
 console.log("🔍 DEBUG: Main calendar classes:", "lg:col-span-3 bg-white rounded-lg shadow");
 console.log("🔍 DEBUG: Small calendar classes:", "lg:col-span-1");
 
@@ -103,6 +106,12 @@ export default function ExecutiveCalendar() {
 
   // Load meetings from localStorage on component mount
   useEffect(() => {
+  // Debug logging for terminal visibility
+  useEffect(() => {
+    console.log("🚀 EXECUTIVE CALENDAR MOUNTED - Server should see this in terminal");
+    console.log("�� Current meetings:", meetings.length);
+    console.log("📅 Current week:", currentWeek.toDateString());
+  }, [meetings, currentWeek]);
     const savedMeetings = localStorage.getItem('executiveMeetings')
     if (savedMeetings) {
       const parsedMeetings = JSON.parse(savedMeetings).map((meeting: any) => ({
@@ -119,6 +128,12 @@ export default function ExecutiveCalendar() {
 
   // Save meetings to localStorage whenever meetings change
   useEffect(() => {
+  // Debug logging for terminal visibility
+  useEffect(() => {
+    console.log("🚀 EXECUTIVE CALENDAR MOUNTED - Server should see this in terminal");
+    console.log("�� Current meetings:", meetings.length);
+    console.log("📅 Current week:", currentWeek.toDateString());
+  }, [meetings, currentWeek]);
     if (meetings.length > 0) {
       localStorage.setItem('executiveMeetings', JSON.stringify(meetings))
     }
