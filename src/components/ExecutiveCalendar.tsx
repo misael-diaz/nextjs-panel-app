@@ -4,7 +4,7 @@ console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap 
 // serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 console.log("🔍 DEBUG: Layout classes:", "flex flex-col lg:flex-row gap-6 max-w-full - FINAL LAYOUT");
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -98,7 +98,8 @@ export default function ExecutiveCalendar() {
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null)
   
-  const todayString = new Date().toDateString()
+  const todayString = useMemo(() => new Date().toDateString(), [])
+  const weekDates = useMemo(() => getWeekDates(currentWeek), [currentWeek])
   // Load meetings from localStorage on component mount
   useEffect(() => {
     console.log("🔍 DEBUG: localStorage useEffect running...")
@@ -862,7 +863,7 @@ export default function ExecutiveCalendar() {
                   Next
                 </button>
                 <span className="text-sm text-gray-600 ml-4">
-                  {format(getWeekDates(currentWeek)[0], 'MMMM d')} - {format(getWeekDates(currentWeek)[6], 'MMMM d, yyyy')}
+                  {format(weekDates[0], 'MMMM d')} - {format(weekDates[6], 'MMMM d, yyyy')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
