@@ -290,15 +290,31 @@ export default function ExecutiveCalendar() {
   }
 
   const handleTimeSlotClick = (dayIndex: number, hour: number) => {
+    console.log("🖱️ DEBUG: Time slot clicked")
+    serverLog("🖱️ DEBUG: Time slot clicked")
+    
     const weekDates = getWeekDates(currentWeek)
     const clickedDate = weekDates[dayIndex]
     clickedDate.setHours(hour, 0, 0, 0)
     
+    const dateString = clickedDate.toISOString().split('T')[0]
+    const timeString = `${String(hour).padStart(2, '0')}:00`
+    
+    console.log("🔍 DEBUG: Time slot click details:")
+    console.log("  - Day index:", dayIndex)
+    console.log("  - Hour:", hour)
+    console.log("  - Clicked date:", clickedDate.toISOString())
+    console.log("  - Date string:", dateString)
+    console.log("  - Time string:", timeString)
+    
+    serverLog("🔍 DEBUG: Time slot click - Day: " + dayIndex + ", Hour: " + hour)
+    serverLog("🔍 DEBUG: Pre-filling form with date: " + dateString + ", time: " + timeString)
+    
     setSelectedTimeSlot({ day: dayIndex, hour })
     setNewMeeting(prev => ({
       ...prev,
-      date: clickedDate.toISOString().split('T')[0],
-      time: `${String(hour).padStart(2, '0')}:00`
+      date: dateString,
+      time: timeString
     }))
     setIsDialogOpen(true)
   }
@@ -329,16 +345,25 @@ export default function ExecutiveCalendar() {
   }
 
   const handleCreateMeeting = () => {
+    console.log("🚀 DEBUG: Starting handleCreateMeeting")
+    serverLog("🚀 DEBUG: Starting handleCreateMeeting")
+    
     // Enhanced validation
     if (!newMeeting.title.trim()) {
+      console.log("❌ Validation failed: No title")
+      serverLog("❌ Validation failed: No title")
       alert('Please enter a meeting title')
       return
     }
     if (!newMeeting.date) {
+      console.log("❌ Validation failed: No date")
+      serverLog("❌ Validation failed: No date")
       alert('Please select a date')
       return
     }
     if (!newMeeting.time) {
+      console.log("❌ Validation failed: No time")
+      serverLog("❌ Validation failed: No time")
       alert('Please select a time')
       return
     }
@@ -349,11 +374,31 @@ export default function ExecutiveCalendar() {
     
     const now = new Date()
     
+    // Debug logging for date/time validation
+    console.log("🔍 DEBUG: Meeting scheduling validation:")
+    console.log("  - Input date:", newMeeting.date)
+    console.log("  - Input time:", newMeeting.time)
+    console.log("  - Parsed hours:", hours, "minutes:", minutes)
+    console.log("  - Meeting date object:", meetingDate.toISOString())
+    console.log("  - Current date object:", now.toISOString())
+    console.log("  - Meeting date timestamp:", meetingDate.getTime())
+    console.log("  - Current date timestamp:", now.getTime())
+    console.log("  - Is meeting in past?", meetingDate < now)
+    
+    serverLog("🔍 DEBUG: Meeting scheduling validation - Input: " + newMeeting.date + " " + newMeeting.time)
+    serverLog("🔍 DEBUG: Meeting date: " + meetingDate.toISOString() + " vs Current: " + now.toISOString())
+    serverLog("🔍 DEBUG: Is meeting in past? " + (meetingDate < now))
+    
     // Check if meeting is in the past (considering both date and time)
     if (meetingDate < now) {
+      console.log("❌ Meeting rejected: scheduled in the past")
+      serverLog("❌ Meeting rejected: scheduled in the past")
       alert('Cannot schedule meetings in the past')
       return
     }
+    
+    console.log("✅ Meeting validation passed: scheduled in the future")
+    serverLog("✅ Meeting validation passed: scheduled in the future")
 
     const meeting: Meeting = {
       id: Date.now().toString(),
@@ -408,18 +453,31 @@ export default function ExecutiveCalendar() {
   }
 
   const handleUpdateMeeting = () => {
-    if (!editingMeeting) return
+    console.log("🚀 DEBUG: Starting handleUpdateMeeting")
+    serverLog("🚀 DEBUG: Starting handleUpdateMeeting")
+    
+    if (!editingMeeting) {
+      console.log("❌ No editing meeting found")
+      serverLog("❌ No editing meeting found")
+      return
+    }
 
     // Enhanced validation
     if (!newMeeting.title.trim()) {
+      console.log("❌ Validation failed: No title")
+      serverLog("❌ Validation failed: No title")
       alert('Please enter a meeting title')
       return
     }
     if (!newMeeting.date) {
+      console.log("❌ Validation failed: No date")
+      serverLog("❌ Validation failed: No date")
       alert('Please select a date')
       return
     }
     if (!newMeeting.time) {
+      console.log("❌ Validation failed: No time")
+      serverLog("❌ Validation failed: No time")
       alert('Please select a time')
       return
     }
@@ -430,11 +488,31 @@ export default function ExecutiveCalendar() {
     
     const now = new Date()
     
+    // Debug logging for date/time validation
+    console.log("🔍 DEBUG: Meeting update validation:")
+    console.log("  - Input date:", newMeeting.date)
+    console.log("  - Input time:", newMeeting.time)
+    console.log("  - Parsed hours:", hours, "minutes:", minutes)
+    console.log("  - Meeting date object:", meetingDate.toISOString())
+    console.log("  - Current date object:", now.toISOString())
+    console.log("  - Meeting date timestamp:", meetingDate.getTime())
+    console.log("  - Current date timestamp:", now.getTime())
+    console.log("  - Is meeting in past?", meetingDate < now)
+    
+    serverLog("🔍 DEBUG: Meeting update validation - Input: " + newMeeting.date + " " + newMeeting.time)
+    serverLog("🔍 DEBUG: Meeting date: " + meetingDate.toISOString() + " vs Current: " + now.toISOString())
+    serverLog("🔍 DEBUG: Is meeting in past? " + (meetingDate < now))
+    
     // Check if meeting is in the past (considering both date and time)
     if (meetingDate < now) {
+      console.log("❌ Meeting update rejected: scheduled in the past")
+      serverLog("❌ Meeting update rejected: scheduled in the past")
       alert('Cannot schedule meetings in the past')
       return
     }
+    
+    console.log("✅ Meeting update validation passed: scheduled in the future")
+    serverLog("✅ Meeting update validation passed: scheduled in the future")
 
     const updatedMeeting: Meeting = {
       ...editingMeeting,
