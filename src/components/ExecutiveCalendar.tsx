@@ -299,10 +299,10 @@ export default function ExecutiveCalendar() {
     }
   }
 
-  const getFilteredMeetings = () => {
+  const getFilteredMeetings = useMemo(() => {
     if (activeFilters.length === 0) return meetings
     return meetings.filter(meeting => activeFilters.includes(meeting.type))
-  }
+  }, [meetings, activeFilters])
 
   const handleTimeSlotClick = (dayIndex: number, hour: number) => {
     console.log("🖱️ DEBUG: Time slot clicked")
@@ -936,7 +936,7 @@ export default function ExecutiveCalendar() {
                 </div>
                 {getWeekDates(currentWeek).map((date, dayIndex) => {
                   // Get all meetings for this day and hour, including those that might overlap
-                  const dayMeetings = getFilteredMeetings().filter(meeting => {
+                  const dayMeetings = getFilteredMeetings.filter(meeting => {
                     const meetingDate = new Date(meeting.date)
                     const meetingHour = parseInt(meeting.time.split(':')[0])
                     const meetingMinutes = parseInt(meeting.time.split(':')[1])
