@@ -2,7 +2,7 @@
 import { serverLog } from "@/lib/server-logger";
 console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-console.log("🔍 DEBUG: Layout classes:", "flex flex-col lg:flex-row gap-6 max-w-full");
+console.log("🔍 DEBUG: Layout classes:", "flex flex-col lg:flex-row gap-6 max-w-full - FINAL LAYOUT");
 console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().toISOString());
 serverLog("🔍 DEBUG: ExecutiveCalendar component rendered at: " + new Date().toISOString());
 
@@ -118,7 +118,7 @@ export default function ExecutiveCalendar() {
     console.log("  - Main container: flex flex-col lg:flex-row gap-6 max-w-full");
     console.log("  - Main calendar: flex-1 lg:w-3/4 bg-white rounded-lg shadow");
     console.log("  - Small calendar: w-full lg:w-1/4");
-    serverLog("🔍 DEBUG: Layout classes - Main: flex-1 lg:w-3/4, Small: w-full lg:w-1/4");
+    serverLog("🔍 DEBUG: Layout classes - Main: flex-1 lg:w-3/4, Small: w-full lg:w-1/4 - FINAL LAYOUT");
     
     // Check if elements exist in DOM
     setTimeout(() => {
