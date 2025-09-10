@@ -82,6 +82,7 @@ export default function SimpleCalendar() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [dropIndicator, setDropIndicator] = useState<{ day: Date; time: string } | null>(null)
 
   // Month view calculations
   const monthStart = startOfMonth(currentDate)
@@ -268,8 +269,28 @@ export default function SimpleCalendar() {
       setDraggedEvent(null)
       setIsDragging(false)
       setDragOffset({ x: 0, y: 0 })
+      setDropIndicator(null)
       serverLog(`Calendar: Finished dragging event "${draggedEvent.title}"`, 'info')
     }
+  }
+
+  const calculateDropTime = (relativeY: number) => {
+    const timeSlotHeight = 60 // pixels per hour
+    const startHour = 6 // 6 AM start time
+    
+    const timeSlotIndex = Math.floor(relativeY / timeSlotHeight)
+    const newHour = startHour + timeSlotIndex
+    
+    const minutesInSlot = ((relativeY % timeSlotHeight) / timeSlotHeight) * 60
+    const newMinute = Math.floor(minutesInSlot / 15) * 15 // Round to 15-minute intervals
+    
+    const clampedHour = Math.max(6, Math.min(22, newHour))
+    const clampedMinute = newMinute >= 60 ? 0 : newMinute
+    
+    const finalHour = clampedMinute === 0 && newMinute >= 60 ? clampedHour + 1 : clampedHour
+    const finalMinute = newMinute >= 60 ? 0 : clampedMinute
+    
+    return `${finalHour.toString().padStart(2, '0')}:${finalMinute.toString().padStart(2, '0')}`
   }
 
   const handleDrop = (event: React.MouseEvent, targetDate: Date) => {
@@ -277,18 +298,8 @@ export default function SimpleCalendar() {
 
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
     const relativeY = event.clientY - rect.top
-    const relativeX = event.clientX - rect.left
     
-    // Calculate time based on Y position (each hour = 60px)
-    const timeOffsetMinutes = Math.max(0, relativeY - (6 * 60)) // Subtract 6 AM offset
-    const newHour = Math.floor(timeOffsetMinutes / 60) + 6
-    const newMinute = Math.floor((timeOffsetMinutes % 60) / 15) * 15 // Round to 15-minute intervals
-    
-    // Ensure time is within bounds
-    const clampedHour = Math.max(6, Math.min(22, newHour))
-    const clampedMinute = newMinute >= 60 ? 0 : newMinute
-    
-    const newTime = `${clampedHour.toString().padStart(2, '0')}:${clampedMinute.toString().padStart(2, '0')}`
+    const newTime = calculateDropTime(relativeY)
     
     // Update the event
     const updatedEvent = {
@@ -514,6 +525,14 @@ export default function SimpleCalendar() {
                         isToday ? 'bg-blue-25' : 'bg-white'
                       } ${isDragging ? 'hover:bg-blue-50' : ''}`}
                       onMouseUp={(e) => handleDrop(e, day)}
+                      onMouseMove={(e) => {
+                        if (isDragging && draggedEvent) {
+                          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                          const relativeY = e.clientY - rect.top
+                          const newTime = calculateDropTime(relativeY)
+                          setDropIndicator({ day, time: newTime })
+                        }
+                      }}
                     >
                       {/* Time slot grid lines */}
                       {timeSlots.map(timeSlot => (
@@ -524,6 +543,21 @@ export default function SimpleCalendar() {
                         />
                       ))}
                       
+                      {/* Drop indicator */}
+                      {isDragging && dropIndicator && isSameDay(day, dropIndicator.day) && (
+                        <div
+                          className="absolute left-0 right-0 bg-blue-500 opacity-50 border-t-2 border-blue-600 z-20"
+                          style={{
+                            top: `${((parseInt(dropIndicator.time.split(':')[0]) - 6) * 60) + (parseInt(dropIndicator.time.split(':')[1]) / 60 * 60)}px`,
+                            height: `${draggedEvent?.duration || 60}px`
+                          }}
+                        >
+                          <div className="text-xs text-white font-medium p-1">
+                            {dropIndicator.time} - {draggedEvent?.title}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Events positioned absolutely */}
                       {dayEvents.map(event => {
                         const colorClass = event.color ? eventColors[event.color] : eventColors.blue
