@@ -425,9 +425,9 @@ export default function ExecutiveCalendar() {
       </div>
 
       {/* La Jaula Style Calendar */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Calendar */}
-        <div className="flex-1 lg:w-3/4 bg-white rounded-lg shadow">
+        <div className="lg:col-span-3 bg-white rounded-lg shadow">
           {/* Header */}
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
@@ -497,19 +497,19 @@ export default function ExecutiveCalendar() {
                   onClick={() => handleNavigation('today')}
                   className="px-3 py-1 text-xs font-medium rounded border border-gray-300 hover:bg-gray-50"
                 >
-                  Hoy
+                  Today
                 </button>
                 <button 
                   onClick={() => handleNavigation('prev')}
                   className="px-3 py-1 text-xs font-medium rounded border border-gray-300 hover:bg-gray-50"
                 >
-                  Anterior
+                  Previous
                 </button>
                 <button 
                   onClick={() => handleNavigation('next')}
                   className="px-3 py-1 text-xs font-medium rounded border border-gray-300 hover:bg-gray-50"
                 >
-                  Siguiente
+                  Next
                 </button>
                 <span className="text-sm text-gray-600 ml-4">
                   {format(getWeekDates(currentWeek)[0], 'MMMM d')} - {format(getWeekDates(currentWeek)[6], 'MMMM d, yyyy')}
@@ -524,7 +524,7 @@ export default function ExecutiveCalendar() {
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Día
+                  Day
                 </button>
                 <button 
                   onClick={() => setViewMode('week')}
@@ -534,7 +534,7 @@ export default function ExecutiveCalendar() {
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Semana
+                  Week
                 </button>
                 <button 
                   onClick={() => setViewMode('month')}
@@ -544,7 +544,7 @@ export default function ExecutiveCalendar() {
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Mes
+                  Month
                 </button>
                 <button 
                   onClick={() => setViewMode('agenda')}
@@ -564,7 +564,7 @@ export default function ExecutiveCalendar() {
           <div className="overflow-hidden">
             {/* Days Header */}
             <div className="grid grid-cols-8 bg-gray-50 border-b">
-              <div className="p-3 text-xs font-medium text-gray-600 border-r text-center">Hora</div>
+              <div className="p-3 text-xs font-medium text-gray-600 border-r text-center">Time</div>
               {getWeekDates(currentWeek).map((date, index) => (
                 <div 
                   key={index} 
@@ -626,7 +626,7 @@ export default function ExecutiveCalendar() {
         </div>
 
         {/* Small Calendar Widget */}
-        <div className="w-full lg:w-1/4">
+        <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-center mb-4">
               <h3 className="text-sm font-semibold text-gray-900">
@@ -646,7 +646,7 @@ export default function ExecutiveCalendar() {
                   viewMode === 'day' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
                 }`}
               >
-                Día
+                Day
               </button>
               <button 
                 onClick={() => setViewMode('week')}
@@ -654,7 +654,7 @@ export default function ExecutiveCalendar() {
                   viewMode === 'week' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
                 }`}
               >
-                Semana
+                Week
               </button>
               <button 
                 onClick={() => setViewMode('month')}
@@ -662,7 +662,7 @@ export default function ExecutiveCalendar() {
                   viewMode === 'month' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'border-gray-300'
                 }`}
               >
-                Mes
+                Month
               </button>
               <button 
                 onClick={() => setViewMode('agenda')}
