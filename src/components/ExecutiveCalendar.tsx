@@ -112,6 +112,48 @@ export default function ExecutiveCalendar() {
     console.log("🔍 DEBUG: Meetings count:", meetings.length);
     serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
     serverLog("🔍 DEBUG: Meetings count: " + meetings.length);
+    
+    // Layout debugging
+    console.log("🔍 DEBUG: Layout structure analysis:");
+    console.log("  - Main container: flex flex-col lg:flex-row gap-6 max-w-full");
+    console.log("  - Main calendar: flex-1 lg:w-3/4 bg-white rounded-lg shadow");
+    console.log("  - Small calendar: w-full lg:w-1/4");
+    serverLog("🔍 DEBUG: Layout classes - Main: flex-1 lg:w-3/4, Small: w-full lg:w-1/4");
+    
+    // Check if elements exist in DOM
+    setTimeout(() => {
+      const mainContainer = document.querySelector('.flex.flex-col.lg\\:flex-row');
+      const mainCalendar = document.querySelector('.flex-1.lg\\:w-3\\/4');
+      const smallCalendar = document.querySelector('.w-full.lg\\:w-1\\/4');
+      
+      console.log("🔍 DEBUG: DOM elements found:");
+      console.log("  - Main container:", mainContainer ? "✅ Found" : "❌ Not found");
+      console.log("  - Main calendar:", mainCalendar ? "✅ Found" : "❌ Not found");
+      console.log("  - Small calendar:", smallCalendar ? "✅ Found" : "❌ Not found");
+      
+      if (mainContainer) {
+        const computedStyle = window.getComputedStyle(mainContainer);
+        console.log("🔍 DEBUG: Main container computed styles:");
+        console.log("  - display:", computedStyle.display);
+        console.log("  - flex-direction:", computedStyle.flexDirection);
+        console.log("  - width:", computedStyle.width);
+        console.log("  - max-width:", computedStyle.maxWidth);
+        serverLog("🔍 DEBUG: Container styles - display: " + computedStyle.display + ", flex-direction: " + computedStyle.flexDirection);
+      }
+      
+      if (mainCalendar && smallCalendar) {
+        const mainRect = mainCalendar.getBoundingClientRect();
+        const smallRect = smallCalendar.getBoundingClientRect();
+        console.log("🔍 DEBUG: Element positions:");
+        console.log("  - Main calendar:", mainRect);
+        console.log("  - Small calendar:", smallRect);
+        console.log("  - Overlap check:", mainRect.right > smallRect.left ? "⚠️ OVERLAPPING" : "✅ No overlap");
+        serverLog("🔍 DEBUG: Overlap check - Main right: " + mainRect.right + ", Small left: " + smallRect.left);
+      }
+      
+      serverLog("🔍 DEBUG: DOM elements check completed");
+    }, 100);
+    
     const savedMeetings = localStorage.getItem('executiveMeetings')
     if (savedMeetings) {
       const parsedMeetings = JSON.parse(savedMeetings).map((meeting: any) => ({
