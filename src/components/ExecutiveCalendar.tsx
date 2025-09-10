@@ -407,6 +407,27 @@ export default function ExecutiveCalendar() {
     console.log("✅ Meeting validation passed: scheduled in the future")
     serverLog("✅ Meeting validation passed: scheduled in the future")
 
+    // Check for overlapping meetings (demo limitation: max 2 per time slot)
+    const [meetingYear, meetingMonth, meetingDay] = newMeeting.date.split('-').map(Number)
+    const [meetingHours, meetingMinutes] = newMeeting.time.split(':').map(Number)
+    const meetingStartTime = new Date(meetingYear, meetingMonth - 1, meetingDay, meetingHours, meetingMinutes, 0, 0)
+    const meetingEndTime = new Date(meetingStartTime.getTime() + (getDurationInHours(newMeeting.duration) * 60 * 60 * 1000))
+    
+    const overlappingCount = meetings.filter(existingMeeting => {
+      const existingStart = new Date(existingMeeting.date)
+      const existingEnd = new Date(existingStart.getTime() + (getDurationInHours(existingMeeting.duration) * 60 * 60 * 1000))
+      
+      // Check if meetings overlap
+      return meetingStartTime < existingEnd && meetingEndTime > existingStart
+    }).length
+    
+    if (overlappingCount >= 2) {
+      console.log("❌ Meeting rejected: too many overlapping meetings (demo limitation: max 2)")
+      serverLog("❌ Meeting rejected: too many overlapping meetings (demo limitation: max 2)")
+      alert('Demo Limitation: Maximum 2 overlapping meetings per time slot. Please choose a different time or edit existing meetings.')
+      return
+    }
+
     const meeting: Meeting = {
       id: Date.now().toString(),
       title: newMeeting.title.trim(),
@@ -904,6 +925,9 @@ export default function ExecutiveCalendar() {
                     return meetingDate.toDateString() === date.toDateString() && meetingHour === hour
                   })
                   
+                  // Check for overlapping meetings and limit to 2
+                  const overlappingMeetings = dayMeetings.length > 2 ? dayMeetings.slice(0, 2) : dayMeetings
+                  
                   return (
                     <div 
                       key={dayIndex}
@@ -912,7 +936,7 @@ export default function ExecutiveCalendar() {
                       }`}
                       onClick={() => handleTimeSlotClick(dayIndex, hour)}
                     >
-                      {dayMeetings.map((meeting, idx) => {
+                      {overlappingMeetings.map((meeting, idx) => {
                         const durationHours = getDurationInHours(meeting.duration)
                         const height = Math.max(60 * durationHours, 60)
                         
@@ -921,16 +945,23 @@ export default function ExecutiveCalendar() {
                         const minutesOffset = meetingMinutes
                         const topOffset = (minutesOffset / 60) * 60 // Convert minutes to pixels (60px per hour)
                         
-                        console.log(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Minutes offset: ${minutesOffset}, Top offset: ${topOffset}px`)
-                        serverLog(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Minutes offset: ${minutesOffset}, Top offset: ${topOffset}px`)
+                        // Google Calendar style: side-by-side layout for overlapping meetings
+                        const isOverlapping = overlappingMeetings.length > 1
+                        const meetingWidth = isOverlapping ? 'calc(50% - 2px)' : 'calc(100% - 8px)'
+                        const meetingLeft = isOverlapping ? (idx === 0 ? '4px' : 'calc(50% + 2px)') : '4px'
+                        
+                        console.log(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Overlapping: ${isOverlapping}, Width: ${meetingWidth}, Left: ${meetingLeft}`)
+                        serverLog(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Overlapping: ${isOverlapping}, Width: ${meetingWidth}, Left: ${meetingLeft}`)
                         
                         return (
                           <div 
                             key={idx} 
-                            className={`absolute left-1 right-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)} group hover:shadow-md transition-shadow z-10`}
+                            className={`absolute rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)} group hover:shadow-md transition-shadow z-10 ${isOverlapping ? 'border-r border-gray-300' : ''}`}
                             style={{ 
                               height: `${height - 8}px`,
-                              top: `${topOffset + 4}px` // 4px for padding
+                              top: `${topOffset + 4}px`,
+                              width: meetingWidth,
+                              left: meetingLeft
                             }}
                           >
                             <div className="flex justify-between items-start">
