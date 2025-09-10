@@ -237,15 +237,13 @@ export default function Dashboard() {
             </>
           )}
 
-          {/* Calendar Tab */}
-          )}
-
           {/* Orders Tab */}
           {activeTab === 'orders' && (
             <OrderManagement />
           )}
 
           {/* Other tabs content */}
+          {activeTab !== 'dashboard' && activeTab !== 'orders' && (
             <Card>
               <CardHeader>
                 <CardTitle>
