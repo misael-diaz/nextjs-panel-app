@@ -1,4 +1,5 @@
 'use client'
+console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 
 import { useState, useEffect } from 'react'
 import { Calendar } from '@/components/ui/calendar'
