@@ -1,24 +1,25 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
-import { serverLog } from '@/lib/server-logger'
+import { serverLog } from "@/lib/server-logger";
+console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
+serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
+console.log("🔍 DEBUG: Layout classes:", "flex flex-col lg:flex-row gap-6 max-w-full - FINAL LAYOUT");
+console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().toISOString());
+serverLog("🔍 DEBUG: ExecutiveCalendar component rendered at: " + new Date().toISOString());
+
+import { useState, useEffect } from 'react'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Plus, Trash2, Edit } from 'lucide-react'
+import { Plus, Clock, Users, MapPin, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 
-console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-  duration: string
+interface Meeting {
   id: string
   title: string
   date: Date
@@ -31,6 +32,8 @@ import { Label } from '@/components/ui/label'
   description: string
 }
 
+// Generate mock meetings for today and tomorrow
+// const today = new Date()
 // const tomorrow = new Date(today)
 // tomorrow.setDate(tomorrow.getDate() + 1)
 
@@ -38,7 +41,7 @@ const mockMeetings: Meeting[] = [
   {
     id: '1',
     title: 'Board of Directors Meeting',
-    date: new Date(2025, 8, 9, 10, 0), // September 15, 2024
+    date: new Date(2025, 8, 10, 10, 0), // September 15, 2024
     time: '10:00 AM',
     duration: '2 hours',
     attendees: ['CEO', 'CFO', 'CTO', 'Board Members'],
@@ -50,7 +53,7 @@ const mockMeetings: Meeting[] = [
   {
     id: '2',
     title: 'Client Presentation - Nike Partnership',
-    date: new Date(2025, 8, 9, 14, 0), // September 18, 2024
+    date: new Date(2025, 8, 10, 14, 0), // September 18, 2024
     time: '2:00 PM',
     duration: '1.5 hours',
     attendees: ['CEO', 'Sales Director', 'Nike Representatives'],
@@ -62,7 +65,7 @@ const mockMeetings: Meeting[] = [
   {
     id: '3',
     title: 'Executive Team Weekly Sync',
-    date: new Date(2025, 8, 10, 9, 0), // September 20, 2024
+    date: new Date(2025, 8, 11, 9, 0), // September 20, 2024
     time: '9:00 AM',
     duration: '1 hour',
     attendees: ['CEO', 'CFO', 'CTO', 'COO'],
@@ -74,7 +77,7 @@ const mockMeetings: Meeting[] = [
   {
     id: '4',
     title: 'Q4 Planning Session',
-    date: new Date(2025, 8, 10, 13, 0), // September 25, 2024
+    date: new Date(2025, 8, 11, 13, 0), // September 25, 2024
     time: '1:00 PM',
     duration: '3 hours',
     attendees: ['All Department Heads'],
@@ -96,24 +99,7 @@ export default function ExecutiveCalendar() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{day: number, hour: number} | null>(null)
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null)
-
-  const getWeekDates = (date: Date) => {
-    const start = new Date(date)
-    const day = start.getDay()
-    const diff = start.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
-    start.setDate(diff)
-    
-    const week = []
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(start)
-      day.setDate(start.getDate() + i)
-      week.push(day)
-    }
-    return week
-  }
   
-  const todayString = useMemo(() => new Date().toDateString(), [])
-  const weekDates = useMemo(() => getWeekDates(currentWeek), [currentWeek])
   // Load meetings from localStorage on component mount
   useEffect(() => {
     console.log("🔍 DEBUG: localStorage useEffect running...")
@@ -139,11 +125,11 @@ export default function ExecutiveCalendar() {
         })))
         serverLog("📅 Loaded meetings from localStorage: " + parsedMeetings.length)
         serverLog("📅 Meeting details: " + JSON.stringify(parsedMeetings.map(m => ({
-// //           title: m.title,
-// //           date: m.date.toDateString(),
-// //           time: m.time,
-// //           duration: m.duration
-// //         }))))
+          title: m.title,
+          date: m.date.toDateString(),
+          time: m.time,
+          duration: m.duration
+        }))))
       } catch (error) {
         console.error("Error loading meetings from localStorage:", error)
         serverLog("Error loading meetings from localStorage: " + error)
@@ -235,7 +221,6 @@ export default function ExecutiveCalendar() {
       
       serverLog("🔍 DEBUG: DOM elements check completed");
     }, 100);
-  }, [currentWeek, meetings])
     
 
   const getMeetingsForDate = (date: Date) => {
@@ -287,6 +272,21 @@ export default function ExecutiveCalendar() {
     }
   }
 
+  const getWeekDates = (date: Date) => {
+    const start = new Date(date)
+    const day = start.getDay()
+    const diff = start.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
+    start.setDate(diff)
+    
+    const week = []
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(start)
+      day.setDate(start.getDate() + i)
+      week.push(day)
+    }
+    return week
+  }
+
   const getDurationInHours = (duration: string) => {
     switch (duration) {
       case '30 minutes': return 0.5
@@ -298,10 +298,10 @@ export default function ExecutiveCalendar() {
     }
   }
 
-  const getFilteredMeetings = useMemo(() => {
+  const getFilteredMeetings = () => {
     if (activeFilters.length === 0) return meetings
     return meetings.filter(meeting => activeFilters.includes(meeting.type))
-  }, [meetings, activeFilters])
+  }
 
   const handleTimeSlotClick = (dayIndex: number, hour: number) => {
     console.log("🖱️ DEBUG: Time slot clicked")
@@ -359,20 +359,6 @@ export default function ExecutiveCalendar() {
   }
 
   const handleCreateMeeting = () => {
-  const handleAddMockMeetings = () => {
-    console.log("🔧 DEBUG: Adding mock meetings to localStorage")
-    serverLog("🔧 DEBUG: Adding mock meetings to localStorage")
-    
-    const existingMeetings = meetings
-    const existingIds = new Set(existingMeetings.map(m => m.id))
-    const newMockMeetings = mockMeetings.filter(mock => !existingIds.has(mock.id))
-    const allMeetings = [...existingMeetings, ...newMockMeetings]
-    
-    setMeetings(allMeetings)
-    console.log("🔧 DEBUG: Added", newMockMeetings.length, "mock meetings. Total:", allMeetings.length)
-    serverLog("🔧 DEBUG: Added " + newMockMeetings.length + " mock meetings. Total: " + allMeetings.length)
-  }
-
     console.log("🚀 DEBUG: Starting handleCreateMeeting")
     serverLog("🚀 DEBUG: Starting handleCreateMeeting")
     
@@ -626,10 +612,6 @@ export default function ExecutiveCalendar() {
               Schedule Meeting
             </Button>
           </DialogTrigger>
-          <Button onClick={handleAddMockMeetings} variant="outline" className="ml-2">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Mock Meetings
-          </Button>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{editingMeeting ? 'Edit Meeting' : 'Schedule New Meeting'}</DialogTitle>
@@ -861,7 +843,7 @@ export default function ExecutiveCalendar() {
                   Next
                 </button>
                 <span className="text-sm text-gray-600 ml-4">
-                  {format(weekDates[0], 'MMMM d')} - {format(weekDates[6], 'MMMM d, yyyy')}
+                  {format(getWeekDates(currentWeek)[0], 'MMMM d')} - {format(getWeekDates(currentWeek)[6], 'MMMM d, yyyy')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -918,7 +900,7 @@ export default function ExecutiveCalendar() {
                 <div 
                   key={index} 
                   className={`p-3 text-xs font-medium text-gray-600 border-r text-center ${
-                    date.toDateString() === todayString ? 'bg-blue-50' : ''
+                    date.toDateString() === new Date().toDateString() ? 'bg-blue-50' : ''
                   }`}
                 >
                   {format(date, 'EEE')}
@@ -934,7 +916,7 @@ export default function ExecutiveCalendar() {
                 </div>
                 {getWeekDates(currentWeek).map((date, dayIndex) => {
                   // Get all meetings for this day and hour, including those that might overlap
-                  const dayMeetings = getFilteredMeetings.filter(meeting => {
+                  const dayMeetings = getFilteredMeetings().filter(meeting => {
                     const meetingDate = new Date(meeting.date)
                     const meetingHour = parseInt(meeting.time.split(':')[0])
                     const meetingMinutes = parseInt(meeting.time.split(':')[1])
@@ -964,7 +946,7 @@ export default function ExecutiveCalendar() {
                     <div 
                       key={dayIndex}
                       className={`p-1 border-r min-h-[60px] hover:bg-gray-50 cursor-pointer relative ${
-                        date.toDateString() === todayString ? 'bg-blue-50' : ''
+                        date.toDateString() === new Date().toDateString() ? 'bg-blue-50' : ''
                       }`}
                       onClick={() => handleTimeSlotClick(dayIndex, hour)}
                     >
