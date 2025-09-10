@@ -1,27 +1,23 @@
 'use client'
-import { serverLog } from "@/lib/server-logger";
-console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-// serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-console.log("🔍 DEBUG: Layout classes:", "flex flex-col lg:flex-row gap-6 max-w-full - FINAL LAYOUT");
-
 import { useState, useEffect, useMemo } from 'react'
+import { serverLog } from '@/lib/server-logger'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Trash2, Edit } from 'lucide-react'
+import { format } from 'date-fns'
+
+console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
+serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Clock, Users, MapPin, AlertCircle } from 'lucide-react'
-import { format } from 'date-fns'
-
-interface Meeting {
-  id: string
-  title: string
-  date: Date
-  time: string
   duration: string
   attendees: string[]
   location: string
@@ -89,7 +85,7 @@ const mockMeetings: Meeting[] = [
 export default function ExecutiveCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   console.log("🔍 DEBUG: ExecutiveCalendar component function called")
-  // serverLog("🔍 DEBUG: ExecutiveCalendar component function called")
+  serverLog("🔍 DEBUG: ExecutiveCalendar component function called")
   const [currentWeek, setCurrentWeek] = useState(new Date())
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'agenda'>('week')
   const [activeFilters, setActiveFilters] = useState<string[]>([])
@@ -97,16 +93,31 @@ export default function ExecutiveCalendar() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{day: number, hour: number} | null>(null)
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null)
+
+  const getWeekDates = (date: Date) => {
+    const start = new Date(date)
+    const day = start.getDay()
+    const diff = start.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
+    start.setDate(diff)
+    
+    const week = []
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(start)
+      day.setDate(start.getDate() + i)
+      week.push(day)
+    }
+    return week
+  }
   
   const todayString = useMemo(() => new Date().toDateString(), [])
   const weekDates = useMemo(() => getWeekDates(currentWeek), [currentWeek])
   // Load meetings from localStorage on component mount
   useEffect(() => {
     console.log("🔍 DEBUG: localStorage useEffect running...")
-    // serverLog("🔍 DEBUG: localStorage useEffect running...")
+    serverLog("🔍 DEBUG: localStorage useEffect running...")
     const savedMeetings = localStorage.getItem('executive-meetings')
     console.log("🔍 DEBUG: Raw localStorage data:", savedMeetings ? "Found data" : "No data")
-    // serverLog("🔍 DEBUG: Raw localStorage data: " + (savedMeetings ? "Found data" : "No data"))
+    serverLog("🔍 DEBUG: Raw localStorage data: " + (savedMeetings ? "Found data" : "No data"))
     if (savedMeetings) {
       try {
         const parsedMeetings = JSON.parse(savedMeetings).map((meeting: any) => ({
@@ -115,7 +126,7 @@ export default function ExecutiveCalendar() {
         }))
         setMeetings(parsedMeetings)
         console.log("🔍 DEBUG: setMeetings called with", parsedMeetings.length, "meetings")
-        // serverLog("🔍 DEBUG: setMeetings called with " + parsedMeetings.length + " meetings")
+        serverLog("🔍 DEBUG: setMeetings called with " + parsedMeetings.length + " meetings")
         console.log("📅 Loaded meetings from localStorage:", parsedMeetings.length)
         console.log("📅 Meeting details:", parsedMeetings.map(m => ({
           title: m.title,
@@ -123,8 +134,8 @@ export default function ExecutiveCalendar() {
           time: m.time,
           duration: m.duration
         })))
-        // serverLog("📅 Loaded meetings from localStorage: " + parsedMeetings.length)
-        // serverLog("📅 Meeting details: " + JSON.stringify(parsedMeetings.map(m => ({
+        serverLog("📅 Loaded meetings from localStorage: " + parsedMeetings.length)
+        serverLog("📅 Meeting details: " + JSON.stringify(parsedMeetings.map(m => ({
 // //           title: m.title,
 // //           date: m.date.toDateString(),
 // //           time: m.time,
@@ -132,11 +143,11 @@ export default function ExecutiveCalendar() {
 // //         }))))
       } catch (error) {
         console.error("Error loading meetings from localStorage:", error)
-        // serverLog("Error loading meetings from localStorage: " + error)
+        serverLog("Error loading meetings from localStorage: " + error)
       }
     } else {
       console.log("📅 No meetings found in localStorage")
-      // serverLog("📅 No meetings found in localStorage")
+      serverLog("📅 No meetings found in localStorage")
     }
   }, [])
   
@@ -145,7 +156,7 @@ export default function ExecutiveCalendar() {
     if (meetings.length > 0) {
       localStorage.setItem('executive-meetings', JSON.stringify(meetings))
       console.log("💾 Saved meetings to localStorage:", meetings.length)
-      // serverLog("💾 Saved meetings to localStorage: " + meetings.length)
+      serverLog("💾 Saved meetings to localStorage: " + meetings.length)
     }
   }, [meetings])
   
@@ -167,15 +178,15 @@ export default function ExecutiveCalendar() {
   useEffect(() => {
     console.log("🔍 DEBUG: Current week:", currentWeek);
     console.log("🔍 DEBUG: Meetings count:", meetings.length);
-    // serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
-    // serverLog("🔍 DEBUG: Meetings count: " + meetings.length);
+    serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
+    serverLog("🔍 DEBUG: Meetings count: " + meetings.length);
     
     // Layout debugging
     console.log("🔍 DEBUG: Layout structure analysis:");
     console.log("  - Main container: flex flex-col lg:flex-row gap-6 max-w-full");
     console.log("  - Main calendar: flex-1 lg:w-3/4 bg-white rounded-lg shadow");
     console.log("  - Small calendar: w-full lg:w-1/4");
-    // serverLog("🔍 DEBUG: Layout classes - Main: flex-1 lg:w-3/4, Small: w-full lg:w-1/4 - FINAL LAYOUT");
+    serverLog("🔍 DEBUG: Layout classes - Main: flex-1 lg:w-3/4, Small: w-full lg:w-1/4 - FINAL LAYOUT");
     
     // Check if elements exist in DOM
     setTimeout(() => {
@@ -195,7 +206,7 @@ export default function ExecutiveCalendar() {
         console.log("  - flex-direction:", computedStyle.flexDirection);
         console.log("  - width:", computedStyle.width);
         console.log("  - max-width:", computedStyle.maxWidth);
-        // serverLog("🔍 DEBUG: Container styles - display: " + computedStyle.display + ", flex-direction: " + computedStyle.flexDirection);
+        serverLog("🔍 DEBUG: Container styles - display: " + computedStyle.display + ", flex-direction: " + computedStyle.flexDirection);
       }
       
       if (mainCalendar && smallCalendar) {
@@ -214,12 +225,12 @@ export default function ExecutiveCalendar() {
         console.log("  - Small z-index:", smallStyle.zIndex, "position:", smallStyle.position);
         console.log("  - Main width:", mainStyle.width, "Small width:", smallStyle.width);
         
-        // serverLog("🔍 DEBUG: Overlap check - Main right: " + mainRect.right + ", Small left: " + smallRect.left);
-        // serverLog("🔍 DEBUG: Z-index - Main: " + mainStyle.zIndex + ", Small: " + smallStyle.zIndex);
-        // serverLog("🔍 DEBUG: Position - Main: " + mainStyle.position + ", Small: " + smallStyle.position);
+        serverLog("🔍 DEBUG: Overlap check - Main right: " + mainRect.right + ", Small left: " + smallRect.left);
+        serverLog("🔍 DEBUG: Z-index - Main: " + mainStyle.zIndex + ", Small: " + smallStyle.zIndex);
+        serverLog("🔍 DEBUG: Position - Main: " + mainStyle.position + ", Small: " + smallStyle.position);
       }
       
-      // serverLog("🔍 DEBUG: DOM elements check completed");
+      serverLog("🔍 DEBUG: DOM elements check completed");
     }, 100);
   }, [currentWeek, meetings])
     
@@ -273,21 +284,6 @@ export default function ExecutiveCalendar() {
     }
   }
 
-  const getWeekDates = (date: Date) => {
-    const start = new Date(date)
-    const day = start.getDay()
-    const diff = start.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
-    start.setDate(diff)
-    
-    const week = []
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(start)
-      day.setDate(start.getDate() + i)
-      week.push(day)
-    }
-    return week
-  }
-
   const getDurationInHours = (duration: string) => {
     switch (duration) {
       case '30 minutes': return 0.5
@@ -306,7 +302,7 @@ export default function ExecutiveCalendar() {
 
   const handleTimeSlotClick = (dayIndex: number, hour: number) => {
     console.log("🖱️ DEBUG: Time slot clicked")
-    // serverLog("🖱️ DEBUG: Time slot clicked")
+    serverLog("🖱️ DEBUG: Time slot clicked")
     
     const weekDates = getWeekDates(currentWeek)
     const clickedDate = weekDates[dayIndex]
@@ -322,8 +318,8 @@ export default function ExecutiveCalendar() {
     console.log("  - Date string:", dateString)
     console.log("  - Time string:", timeString)
     
-    // serverLog("🔍 DEBUG: Time slot click - Day: " + dayIndex + ", Hour: " + hour)
-    // serverLog("🔍 DEBUG: Pre-filling form with date: " + dateString + ", time: " + timeString)
+    serverLog("🔍 DEBUG: Time slot click - Day: " + dayIndex + ", Hour: " + hour)
+    serverLog("🔍 DEBUG: Pre-filling form with date: " + dateString + ", time: " + timeString)
     
     setSelectedTimeSlot({ day: dayIndex, hour })
     setNewMeeting(prev => ({
@@ -362,7 +358,7 @@ export default function ExecutiveCalendar() {
   const handleCreateMeeting = () => {
   const handleAddMockMeetings = () => {
     console.log("🔧 DEBUG: Adding mock meetings to localStorage")
-    // serverLog("🔧 DEBUG: Adding mock meetings to localStorage")
+    serverLog("🔧 DEBUG: Adding mock meetings to localStorage")
     
     const existingMeetings = meetings
     const existingIds = new Set(existingMeetings.map(m => m.id))
@@ -371,28 +367,28 @@ export default function ExecutiveCalendar() {
     
     setMeetings(allMeetings)
     console.log("🔧 DEBUG: Added", newMockMeetings.length, "mock meetings. Total:", allMeetings.length)
-    // serverLog("🔧 DEBUG: Added " + newMockMeetings.length + " mock meetings. Total: " + allMeetings.length)
+    serverLog("🔧 DEBUG: Added " + newMockMeetings.length + " mock meetings. Total: " + allMeetings.length)
   }
 
     console.log("🚀 DEBUG: Starting handleCreateMeeting")
-    // serverLog("🚀 DEBUG: Starting handleCreateMeeting")
+    serverLog("🚀 DEBUG: Starting handleCreateMeeting")
     
     // Enhanced validation
     if (!newMeeting.title.trim()) {
       console.log("❌ Validation failed: No title")
-      // serverLog("❌ Validation failed: No title")
+      serverLog("❌ Validation failed: No title")
       alert('Please enter a meeting title')
       return
     }
     if (!newMeeting.date) {
       console.log("❌ Validation failed: No date")
-      // serverLog("❌ Validation failed: No date")
+      serverLog("❌ Validation failed: No date")
       alert('Please select a date')
       return
     }
     if (!newMeeting.time) {
       console.log("❌ Validation failed: No time")
-      // serverLog("❌ Validation failed: No time")
+      serverLog("❌ Validation failed: No time")
       alert('Please select a time')
       return
     }
@@ -416,20 +412,20 @@ export default function ExecutiveCalendar() {
     console.log("  - Current date timestamp:", now.getTime())
     console.log("  - Is meeting in past?", meetingDate < now)
     
-    // serverLog("🔍 DEBUG: Meeting scheduling validation - Input: " + newMeeting.date + " " + newMeeting.time)
-    // serverLog("🔍 DEBUG: Meeting date: " + meetingDate.toISOString() + " vs Current: " + now.toISOString())
-    // serverLog("🔍 DEBUG: Is meeting in past? " + (meetingDate < now))
+    serverLog("🔍 DEBUG: Meeting scheduling validation - Input: " + newMeeting.date + " " + newMeeting.time)
+    serverLog("🔍 DEBUG: Meeting date: " + meetingDate.toISOString() + " vs Current: " + now.toISOString())
+    serverLog("🔍 DEBUG: Is meeting in past? " + (meetingDate < now))
     
     // Check if meeting is in the past (considering both date and time)
     if (meetingDate < now) {
       console.log("❌ Meeting rejected: scheduled in the past")
-      // serverLog("❌ Meeting rejected: scheduled in the past")
+      serverLog("❌ Meeting rejected: scheduled in the past")
       alert('Cannot schedule meetings in the past')
       return
     }
     
     console.log("✅ Meeting validation passed: scheduled in the future")
-    // serverLog("✅ Meeting validation passed: scheduled in the future")
+    serverLog("✅ Meeting validation passed: scheduled in the future")
 
     // Check for overlapping meetings (demo limitation: max 2 per time slot)
     const [meetingYear, meetingMonth, meetingDay] = newMeeting.date.split('-').map(Number)
@@ -447,7 +443,7 @@ export default function ExecutiveCalendar() {
     
     if (overlappingCount >= 2) {
       console.log("❌ Meeting rejected: too many overlapping meetings (demo limitation: max 2)")
-      // serverLog("❌ Meeting rejected: too many overlapping meetings (demo limitation: max 2)")
+      serverLog("❌ Meeting rejected: too many overlapping meetings (demo limitation: max 2)")
       alert('Demo Limitation: Maximum 2 overlapping meetings per time slot. Please choose a different time or edit existing meetings.')
       return
     }
@@ -484,7 +480,7 @@ export default function ExecutiveCalendar() {
     
     // Success notification
     console.log("✅ Meeting scheduled successfully:", meeting.title)
-    // serverLog("✅ Meeting scheduled successfully: " + meeting.title)
+    serverLog("✅ Meeting scheduled successfully: " + meeting.title)
     alert(`Meeting "${meeting.title}" scheduled successfully!`)
   }
 
@@ -506,30 +502,30 @@ export default function ExecutiveCalendar() {
 
   const handleUpdateMeeting = () => {
     console.log("🚀 DEBUG: Starting handleUpdateMeeting")
-    // serverLog("🚀 DEBUG: Starting handleUpdateMeeting")
+    serverLog("🚀 DEBUG: Starting handleUpdateMeeting")
     
     if (!editingMeeting) {
       console.log("❌ No editing meeting found")
-      // serverLog("❌ No editing meeting found")
+      serverLog("❌ No editing meeting found")
       return
     }
 
     // Enhanced validation
     if (!newMeeting.title.trim()) {
       console.log("❌ Validation failed: No title")
-      // serverLog("❌ Validation failed: No title")
+      serverLog("❌ Validation failed: No title")
       alert('Please enter a meeting title')
       return
     }
     if (!newMeeting.date) {
       console.log("❌ Validation failed: No date")
-      // serverLog("❌ Validation failed: No date")
+      serverLog("❌ Validation failed: No date")
       alert('Please select a date')
       return
     }
     if (!newMeeting.time) {
       console.log("❌ Validation failed: No time")
-      // serverLog("❌ Validation failed: No time")
+      serverLog("❌ Validation failed: No time")
       alert('Please select a time')
       return
     }
@@ -553,20 +549,20 @@ export default function ExecutiveCalendar() {
     console.log("  - Current date timestamp:", now.getTime())
     console.log("  - Is meeting in past?", meetingDate < now)
     
-    // serverLog("🔍 DEBUG: Meeting update validation - Input: " + newMeeting.date + " " + newMeeting.time)
-    // serverLog("🔍 DEBUG: Meeting date: " + meetingDate.toISOString() + " vs Current: " + now.toISOString())
-    // serverLog("🔍 DEBUG: Is meeting in past? " + (meetingDate < now))
+    serverLog("🔍 DEBUG: Meeting update validation - Input: " + newMeeting.date + " " + newMeeting.time)
+    serverLog("🔍 DEBUG: Meeting date: " + meetingDate.toISOString() + " vs Current: " + now.toISOString())
+    serverLog("🔍 DEBUG: Is meeting in past? " + (meetingDate < now))
     
     // Check if meeting is in the past (considering both date and time)
     if (meetingDate < now) {
       console.log("❌ Meeting update rejected: scheduled in the past")
-      // serverLog("❌ Meeting update rejected: scheduled in the past")
+      serverLog("❌ Meeting update rejected: scheduled in the past")
       alert('Cannot schedule meetings in the past')
       return
     }
     
     console.log("✅ Meeting update validation passed: scheduled in the future")
-    // serverLog("✅ Meeting update validation passed: scheduled in the future")
+    serverLog("✅ Meeting update validation passed: scheduled in the future")
 
     const updatedMeeting: Meeting = {
       ...editingMeeting,
@@ -599,7 +595,7 @@ export default function ExecutiveCalendar() {
     setIsDialogOpen(false)
     
     console.log("✅ Meeting updated successfully:", updatedMeeting.title)
-    // serverLog("✅ Meeting updated successfully: " + updatedMeeting.title)
+    serverLog("✅ Meeting updated successfully: " + updatedMeeting.title)
     alert(`Meeting "${updatedMeeting.title}" updated successfully!`)
   }
 
@@ -607,7 +603,7 @@ export default function ExecutiveCalendar() {
     if (confirm('Are you sure you want to delete this meeting?')) {
       setMeetings(prev => prev.filter(m => m.id !== meetingId))
       console.log("🗑️ Meeting deleted:", meetingId)
-      // serverLog("🗑️ Meeting deleted: " + meetingId)
+      serverLog("🗑️ Meeting deleted: " + meetingId)
       alert('Meeting deleted successfully!')
     }
   }
@@ -958,8 +954,8 @@ export default function ExecutiveCalendar() {
                   
                   console.log(`🔍 DEBUG: Time slot ${hour}:00 - Found ${dayMeetings.length} meetings, showing ${overlappingMeetings.length}`)
                   console.log(`🔍 DEBUG: Current date being checked: ${date.toDateString()}`)
-                  // serverLog(`🔍 DEBUG: Time slot ${hour}:00 - Found ${dayMeetings.length} meetings, showing ${overlappingMeetings.length}`)
-                  // serverLog(`🔍 DEBUG: Current date being checked: ${date.toDateString()}`)
+                  serverLog(`🔍 DEBUG: Time slot ${hour}:00 - Found ${dayMeetings.length} meetings, showing ${overlappingMeetings.length}`)
+                  serverLog(`🔍 DEBUG: Current date being checked: ${date.toDateString()}`)
                   
                   return (
                     <div 
@@ -987,7 +983,7 @@ export default function ExecutiveCalendar() {
                         const meetingLeft = isOverlapping ? (idx === 0 ? '4px' : 'calc(50% + 2px)') : '4px'
                         
                         console.log(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Overlapping: ${isOverlapping}, Width: ${meetingWidth}, Left: ${meetingLeft}`)
-                        // serverLog(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Overlapping: ${isOverlapping}, Width: ${meetingWidth}, Left: ${meetingLeft}`)
+                        serverLog(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Overlapping: ${isOverlapping}, Width: ${meetingWidth}, Left: ${meetingLeft}`)
                         
                         return (
                           <div 
