@@ -139,7 +139,7 @@ export default function ExecutiveCalendar() {
           duration: m.duration
         })))
         serverLog("📅 Loaded meetings from localStorage: " + parsedMeetings.length)
-        serverLog("📅 Meeting details: " + JSON.stringify(parsedMeetings.map(m => ({
+      } catch (error) {
         console.error("Error loading meetings from localStorage:", error)
         serverLog("Error loading meetings from localStorage: " + error)
       }
@@ -148,11 +148,6 @@ export default function ExecutiveCalendar() {
       serverLog("📅 No meetings found in localStorage")
     }
   }, [])
-  
-  // Save meetings to localStorage whenever meetings change
-  useEffect(() => {
-    if (meetings.length > 0) {
-      localStorage.setItem('executive-meetings', JSON.stringify(meetings))
       console.log("💾 Saved meetings to localStorage:", meetings.length)
       serverLog("💾 Saved meetings to localStorage: " + meetings.length)
     }
