@@ -83,6 +83,10 @@ export default function SimpleCalendar() {
   const [isDragging, setIsDragging] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [dropIndicator, setDropIndicator] = useState<{ day: Date; time: string } | null>(null)
+  const [isResizing, setIsResizing] = useState(false)
+  const [resizeHandle, setResizeHandle] = useState<'top' | 'bottom' | null>(null)
+  const [resizeStartY, setResizeStartY] = useState(0)
+  const [resizeStartDuration, setResizeStartDuration] = useState(0)
 
   // Month view calculations
   const monthStart = startOfMonth(currentDate)
@@ -251,6 +255,8 @@ export default function SimpleCalendar() {
 
   // Drag and drop handlers
   const handleDragStart = (event: React.MouseEvent, eventData: Event) => {
+    if (isResizing) return // Don't start dragging if we're resizing
+    
     event.preventDefault()
     setDraggedEvent(eventData)
     setIsDragging(true)
@@ -272,6 +278,70 @@ export default function SimpleCalendar() {
       setDropIndicator(null)
       serverLog(`Calendar: Finished dragging event "${draggedEvent.title}"`, 'info')
     }
+  }
+
+  // Resize handlers
+  const handleResizeStart = (event: React.MouseEvent, eventData: Event, handle: 'top' | 'bottom') => {
+    event.preventDefault()
+    event.stopPropagation()
+    
+    setDraggedEvent(eventData)
+    setIsResizing(true)
+    setResizeHandle(handle)
+    setResizeStartY(event.clientY)
+    setResizeStartDuration(eventData.duration || 60)
+    
+    serverLog(`Calendar: Started resizing event "${eventData.title}" from ${handle}`, 'info')
+  }
+
+  const handleResizeEnd = () => {
+    if (isResizing && draggedEvent) {
+      setIsResizing(false)
+      setResizeHandle(null)
+      setDraggedEvent(null)
+      setResizeStartY(0)
+      setResizeStartDuration(0)
+      serverLog(`Calendar: Finished resizing event "${draggedEvent.title}"`, 'info')
+    }
+  }
+
+  const handleResize = (event: React.MouseEvent) => {
+    if (!isResizing || !draggedEvent || !resizeHandle) return
+
+    const deltaY = event.clientY - resizeStartY
+    const deltaMinutes = Math.round(deltaY / 60 * 60) // Convert pixels to minutes (60px = 60 minutes)
+    
+    let newDuration = resizeStartDuration
+    
+    if (resizeHandle === 'bottom') {
+      // Resizing from bottom - extend/contract duration
+      newDuration = Math.max(15, resizeStartDuration + deltaMinutes) // Minimum 15 minutes
+    } else if (resizeHandle === 'top') {
+      // Resizing from top - adjust start time and duration
+      const [hours, minutes] = draggedEvent.time.split(':').map(Number)
+      const startMinutes = hours * 60 + minutes
+      const newStartMinutes = Math.max(6 * 60, startMinutes + deltaMinutes) // Don't go before 6 AM
+      
+      const newStartTime = `${Math.floor(newStartMinutes / 60).toString().padStart(2, '0')}:${(newStartMinutes % 60).toString().padStart(2, '0')}`
+      const durationChange = startMinutes - newStartMinutes
+      newDuration = Math.max(15, resizeStartDuration + durationChange)
+      
+      // Update the event with new start time
+      const updatedEvent = {
+        ...draggedEvent,
+        time: newStartTime,
+        duration: newDuration
+      }
+      setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
+      return
+    }
+    
+    // Update duration for bottom resize
+    const updatedEvent = {
+      ...draggedEvent,
+      duration: newDuration
+    }
+    setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
   }
 
   const calculateDropTime = (relativeY: number) => {
@@ -318,9 +388,20 @@ export default function SimpleCalendar() {
   return (
     <div 
       className="w-full max-w-7xl mx-auto bg-white h-[calc(100vh-200px)] flex flex-col"
-      onMouseUp={handleDragEnd}
-      onMouseLeave={handleDragEnd}
-      onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+      onMouseUp={(e) => {
+        handleDragEnd()
+        handleResizeEnd()
+      }}
+      onMouseLeave={(e) => {
+        handleDragEnd()
+        handleResizeEnd()
+      }}
+      onMouseMove={(e) => {
+        setMousePosition({ x: e.clientX, y: e.clientY })
+        if (isResizing) {
+          handleResize(e)
+        }
+      }}
     >
       {/* Google Calendar-style Header */}
       <div className="border-b border-gray-200 bg-white px-6 py-4">
@@ -589,9 +670,13 @@ export default function SimpleCalendar() {
                               hasTooManyOverlaps 
                                 ? 'bg-red-100 text-red-800 border-red-200' 
                                 : `${colorClass.bg} ${colorClass.text} ${colorClass.border}`
-                            } ${isBeingDragged ? 'opacity-50 scale-105 shadow-lg' : ''}`}
+                            } ${isBeingDragged ? 'opacity-50 scale-105 shadow-lg' : ''} ${isResizing ? 'pointer-events-none' : ''}`}
                             style={eventStyle}
-                            onMouseDown={(e) => handleDragStart(e, event)}
+                            onMouseDown={(e) => {
+                              if (!isResizing) {
+                                handleDragStart(e, event)
+                              }
+                            }}
                             onClick={(e) => {
                               e.stopPropagation()
                               if (hasTooManyOverlaps) {
@@ -601,10 +686,23 @@ export default function SimpleCalendar() {
                               // Could add event editing here
                             }}
                           >
+                            {/* Top resize handle */}
+                            <div
+                              className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-black hover:bg-opacity-20 transition-colors"
+                              onMouseDown={(e) => handleResizeStart(e, event, 'top')}
+                            />
+                            
+                            {/* Event content */}
                             <div className="p-1 text-xs font-medium truncate select-none">
                               {event.time} - {event.title}
                               {hasTooManyOverlaps && ' ⚠️'}
                             </div>
+                            
+                            {/* Bottom resize handle */}
+                            <div
+                              className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-black hover:bg-opacity-20 transition-colors"
+                              onMouseDown={(e) => handleResizeStart(e, event, 'bottom')}
+                            />
                           </div>
                         )
                       })}
