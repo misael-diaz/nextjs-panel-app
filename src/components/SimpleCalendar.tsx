@@ -13,6 +13,20 @@ interface Event {
   date: Date
   time: string
   description?: string
+  color?: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'orange' | 'teal' | 'pink'
+  duration?: number // in minutes
+}
+
+// Google Calendar color palette
+const eventColors = {
+  blue: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
+  green: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
+  yellow: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
+  red: { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },
+  purple: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
+  orange: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
+  teal: { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
+  pink: { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' }
 }
 
 export default function SimpleCalendar() {
@@ -93,9 +107,14 @@ export default function SimpleCalendar() {
   }
 
   const handleCreateEvent = (eventData: Omit<Event, 'id'>) => {
+    const colors = Object.keys(eventColors) as Array<keyof typeof eventColors>
+    const randomColor = colors[Math.floor(Math.random() * colors.length)]
+    
     const newEvent: Event = {
       ...eventData,
-      id: Date.now().toString()
+      id: Date.now().toString(),
+      color: randomColor,
+      duration: 60 // Default 1 hour
     }
     setEvents([...events, newEvent])
     setShowEventForm(false)
@@ -104,85 +123,113 @@ export default function SimpleCalendar() {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold">
-              {view === 'month' 
-                ? format(currentDate, 'MMMM yyyy')
-                : `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
-              }
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              {/* View Toggle */}
-              <div className="flex items-center border rounded-md">
+    <div className="w-full max-w-7xl mx-auto bg-white h-[calc(100vh-200px)] flex flex-col">
+      {/* Google Calendar-style Header */}
+      <div className="border-b border-gray-200 bg-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Left side - Title and Navigation */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-normal text-gray-900">
+                {view === 'month' 
+                  ? format(currentDate, 'MMMM yyyy')
+                  : `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
+                }
+              </h1>
+              <div className="flex items-center gap-1">
                 <Button
-                  variant={view === 'week' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    setView('week')
-                    serverLog('Calendar: Switched to week view', 'info')
-                  }}
-                  className="rounded-r-none"
+                  onClick={() => navigatePeriod('prev')}
+                  className="h-8 w-8 p-0 hover:bg-gray-100"
                 >
-                  <Grid3X3 className="w-4 h-4 mr-1" />
-                  Week
+                  <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={view === 'month' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    setView('month')
-                    serverLog('Calendar: Switched to month view', 'info')
-                  }}
-                  className="rounded-l-none"
+                  onClick={() => navigatePeriod('next')}
+                  className="h-8 w-8 p-0 hover:bg-gray-100"
                 >
-                  <Calendar className="w-4 h-4 mr-1" />
-                  Month
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-              
-              {/* Navigation */}
+            </div>
+            
+            {/* Today Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setCurrentDate(new Date())
+                serverLog(`Calendar: User clicked "Today" button - navigated to current ${view}`, 'info')
+              }}
+              className="h-8 px-3 text-sm font-medium border-gray-300 hover:bg-gray-50"
+            >
+              Today
+            </Button>
+          </div>
+
+          {/* Right side - View Toggle and Create Event */}
+          <div className="flex items-center gap-3">
+            {/* View Toggle */}
+            <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigatePeriod('prev')}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
+                variant={view === 'week' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => {
-                  setCurrentDate(new Date())
-                  serverLog(`Calendar: User clicked "Today" button - navigated to current ${view}`, 'info')
+                  setView('week')
+                  serverLog('Calendar: Switched to week view', 'info')
                 }}
+                className="h-8 px-3 text-sm font-medium rounded-none border-0"
               >
-                Today
+                Week
               </Button>
               <Button
-                variant="outline"
+                variant={view === 'month' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => navigatePeriod('next')}
+                onClick={() => {
+                  setView('month')
+                  serverLog('Calendar: Switched to month view', 'info')
+                }}
+                className="h-8 px-3 text-sm font-medium rounded-none border-0"
               >
-                <ChevronRight className="w-4 h-4" />
+                Month
               </Button>
             </div>
+            
+            {/* Create Event Button */}
+            <Button
+              size="sm"
+              onClick={() => {
+                setSelectedDate(new Date())
+                setShowEventForm(true)
+                serverLog('Calendar: User clicked "Create" button', 'info')
+              }}
+              className="h-8 px-4 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Create
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {view === 'month' ? (
-            /* Month View */
-            <div className="grid grid-cols-7 gap-1">
-              {/* Day headers */}
+        </div>
+      </div>
+      {/* Calendar Content */}
+      <div className="flex-1 overflow-hidden">
+        {view === 'month' ? (
+          /* Month View */
+          <div className="h-full">
+            {/* Day headers */}
+            <div className="grid grid-cols-7 border-b border-gray-200">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="p-2 text-center font-semibold text-gray-600 text-sm">
+                <div key={day} className="p-3 text-center font-medium text-gray-600 text-sm border-r border-gray-200 last:border-r-0">
                   {day}
                 </div>
               ))}
-              
-              {/* Calendar days */}
+            </div>
+            
+            {/* Calendar days */}
+            <div className="grid grid-cols-7 h-full">
               {allDays.map((day, index) => {
                 const dayEvents = getEventsForDate(day)
                 const isCurrentMonth = isSameMonth(day, currentDate)
@@ -192,29 +239,33 @@ export default function SimpleCalendar() {
                   <div
                     key={index}
                     className={`
-                      min-h-[100px] p-2 border border-gray-200 cursor-pointer hover:bg-gray-50
+                      min-h-[120px] p-2 border-r border-b border-gray-200 cursor-pointer hover:bg-gray-50
                       ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'}
-                      ${isToday ? 'bg-blue-50 border-blue-300' : ''}
+                      ${isToday ? 'bg-blue-50' : ''}
+                      last:border-r-0
                     `}
                     onClick={() => handleDateClick(day)}
                   >
-                    <div className={`text-sm font-medium mb-1 ${isToday ? 'text-blue-600' : ''}`}>
+                    <div className={`text-sm font-medium mb-2 ${isToday ? 'text-blue-600 font-semibold' : ''}`}>
                       {format(day, 'd')}
                     </div>
                     
                     {/* Events for this day */}
                     <div className="space-y-1">
-                      {dayEvents.slice(0, 3).map(event => (
-                        <div
-                          key={event.id}
-                          className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded truncate"
-                        >
-                          {event.time} - {event.title}
-                        </div>
-                      ))}
-                      {dayEvents.length > 3 && (
-                        <div className="text-xs text-gray-500">
-                          +{dayEvents.length - 3} more
+                      {dayEvents.slice(0, 4).map(event => {
+                        const colorClass = event.color ? eventColors[event.color] : eventColors.blue
+                        return (
+                          <div
+                            key={event.id}
+                            className={`text-xs ${colorClass.bg} ${colorClass.text} px-2 py-1 rounded-sm truncate border-l-2 ${colorClass.border}`}
+                          >
+                            {event.time} - {event.title}
+                          </div>
+                        )
+                      })}
+                      {dayEvents.length > 4 && (
+                        <div className="text-xs text-gray-500 font-medium">
+                          +{dayEvents.length - 4} more
                         </div>
                       )}
                     </div>
@@ -222,76 +273,82 @@ export default function SimpleCalendar() {
                 )
               })}
             </div>
-          ) : (
-            /* Week View */
-            <div className="overflow-x-auto">
-              <div className="min-w-[800px]">
-                {/* Day headers */}
-                <div className="grid grid-cols-8 gap-1 mb-2">
-                  <div className="p-2 text-center font-semibold text-gray-600 text-sm">
-                    Time
+          </div>
+        ) : (
+          /* Week View - Google Calendar Style */
+          <div className="h-full flex flex-col">
+            {/* Day headers */}
+            <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
+              <div className="p-3 text-center font-medium text-gray-600 text-sm border-r border-gray-200">
+                Time
+              </div>
+              {weekDays.map(day => {
+                const isToday = isSameDay(day, new Date())
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className={`p-3 text-center border-r border-gray-200 last:border-r-0 ${
+                      isToday ? 'bg-blue-50' : 'bg-gray-50'
+                    }`}
+                  >
+                    <div className="text-xs font-medium text-gray-600">{format(day, 'EEE')}</div>
+                    <div className={`text-lg font-semibold ${isToday ? 'text-blue-600' : 'text-gray-900'}`}>
+                      {format(day, 'd')}
+                    </div>
                   </div>
-                  {weekDays.map(day => {
-                    const isToday = isSameDay(day, new Date())
-                    return (
-                      <div
-                        key={day.toISOString()}
-                        className={`p-2 text-center font-semibold text-sm ${
-                          isToday ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-                        }`}
-                      >
-                        <div className="text-xs">{format(day, 'EEE')}</div>
-                        <div className="text-lg font-bold">{format(day, 'd')}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-                
-                {/* Time slots */}
-                <div className="grid grid-cols-8 gap-1">
-                  {timeSlots.map(timeSlot => (
-                    <React.Fragment key={timeSlot.hour}>
-                      {/* Time label */}
-                      <div className="p-2 text-right text-xs text-gray-500 border-r border-gray-200">
-                        {timeSlot.label}
-                      </div>
+                )
+              })}
+            </div>
+            
+            {/* Time slots */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-8">
+                {timeSlots.map(timeSlot => (
+                  <React.Fragment key={timeSlot.hour}>
+                    {/* Time label */}
+                    <div className="p-2 text-right text-xs text-gray-500 border-r border-b border-gray-200 bg-gray-50">
+                      {timeSlot.label}
+                    </div>
+                    
+                    {/* Day columns */}
+                    {weekDays.map(day => {
+                      const dayEvents = getEventsForDate(day).filter(event => 
+                        event.time.startsWith(timeSlot.time.substring(0, 2))
+                      )
+                      const isToday = isSameDay(day, new Date())
                       
-                      {/* Day columns */}
-                      {weekDays.map(day => {
-                        const dayEvents = getEventsForDate(day).filter(event => 
-                          event.time.startsWith(timeSlot.time.substring(0, 2))
-                        )
-                        const isToday = isSameDay(day, new Date())
-                        
-                        return (
-                          <div
-                            key={`${day.toISOString()}-${timeSlot.hour}`}
-                            className={`
-                              min-h-[60px] p-1 border border-gray-200 cursor-pointer hover:bg-gray-50
-                              ${isToday ? 'bg-blue-25' : 'bg-white'}
-                            `}
-                            onClick={() => handleTimeSlotClick(day, timeSlot.time)}
-                          >
-                            {/* Events for this time slot */}
-                            {dayEvents.map(event => (
+                      return (
+                        <div
+                          key={`${day.toISOString()}-${timeSlot.hour}`}
+                          className={`
+                            min-h-[60px] p-1 border-r border-b border-gray-200 cursor-pointer hover:bg-blue-50
+                            ${isToday ? 'bg-blue-25' : 'bg-white'}
+                            last:border-r-0
+                          `}
+                          onClick={() => handleTimeSlotClick(day, timeSlot.time)}
+                        >
+                          {/* Events for this time slot */}
+                          {dayEvents.map(event => {
+                            const colorClass = event.color ? eventColors[event.color] : eventColors.blue
+                            return (
                               <div
                                 key={event.id}
-                                className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded mb-1 truncate"
+                                className={`text-xs ${colorClass.bg} ${colorClass.text} px-2 py-1 rounded-sm mb-1 truncate border-l-2 ${colorClass.border} font-medium`}
                               >
                                 {event.title}
                               </div>
-                            ))}
-                          </div>
-                        )
-                      })}
-                    </React.Fragment>
-                  ))}
-                </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    })}
+                  </React.Fragment>
+                ))}
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
 
       {/* Event Creation Form */}
       {showEventForm && selectedDate && (
@@ -342,66 +399,87 @@ function EventForm({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Create Event</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Date</label>
-              <div className="text-sm text-gray-600">
-                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-              </div>
+      <div className="w-full max-w-lg bg-white rounded-lg shadow-xl">
+        {/* Google Calendar-style Header */}
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Create event</h2>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          {/* Date Display */}
+          <div className="bg-gray-50 p-3 rounded-md">
+            <div className="text-sm font-medium text-gray-700">Date</div>
+            <div className="text-sm text-gray-600">
+              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </div>
-            
-            <div>
-              <label className="text-sm font-medium">Title *</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Event title"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Time</label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Description</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                placeholder="Event description (optional)"
-              />
-            </div>
-            
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1">
-                Create Event
-              </Button>
-              <Button type="button" variant="outline" onClick={() => {
-                onClose()
-                serverLog('Calendar: Event form cancelled by user', 'info')
-              }}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+          
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title *
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Add title"
+              required
+              autoFocus
+            />
+          </div>
+          
+          {/* Time */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Time
+            </label>
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              rows={3}
+              placeholder="Add description"
+            />
+          </div>
+        </form>
+        
+        {/* Google Calendar-style Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            onClick={() => {
+              onClose()
+              serverLog('Calendar: Event form cancelled by user', 'info')
+            }}
+            className="text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            onClick={handleSubmit}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4"
+          >
+            Save
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
