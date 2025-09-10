@@ -90,6 +90,8 @@ const mockMeetings: Meeting[] = [
 
 export default function ExecutiveCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  console.log("🔍 DEBUG: ExecutiveCalendar component function called")
+  serverLog("🔍 DEBUG: ExecutiveCalendar component function called")
   const [currentWeek, setCurrentWeek] = useState(new Date())
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'agenda'>('week')
   const [activeFilters, setActiveFilters] = useState<string[]>([])
@@ -100,7 +102,11 @@ export default function ExecutiveCalendar() {
   
   // Load meetings from localStorage on component mount
   useEffect(() => {
+    console.log("🔍 DEBUG: localStorage useEffect running...")
+    serverLog("🔍 DEBUG: localStorage useEffect running...")
     const savedMeetings = localStorage.getItem('executive-meetings')
+    console.log("🔍 DEBUG: Raw localStorage data:", savedMeetings ? "Found data" : "No data")
+    serverLog("🔍 DEBUG: Raw localStorage data: " + (savedMeetings ? "Found data" : "No data"))
     if (savedMeetings) {
       try {
         const parsedMeetings = JSON.parse(savedMeetings).map((meeting: any) => ({
@@ -108,6 +114,8 @@ export default function ExecutiveCalendar() {
           date: new Date(meeting.date)
         }))
         setMeetings(parsedMeetings)
+        console.log("🔍 DEBUG: setMeetings called with", parsedMeetings.length, "meetings")
+        serverLog("🔍 DEBUG: setMeetings called with " + parsedMeetings.length + " meetings")
         console.log("📅 Loaded meetings from localStorage:", parsedMeetings.length)
         console.log("📅 Meeting details:", parsedMeetings.map(m => ({
           title: m.title,
