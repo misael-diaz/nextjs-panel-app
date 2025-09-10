@@ -1,5 +1,8 @@
 'use client'
 console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
+console.log("🔍 DEBUG: Grid layout classes:", "grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden");
+console.log("🔍 DEBUG: Main calendar classes:", "lg:col-span-3 bg-white rounded-lg shadow");
+console.log("🔍 DEBUG: Small calendar classes:", "lg:col-span-1");
 
 import { useState, useEffect } from 'react'
 import { Calendar } from '@/components/ui/calendar'
@@ -426,7 +429,7 @@ export default function ExecutiveCalendar() {
       </div>
 
       {/* La Jaula Style Calendar */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden">
         {/* Main Calendar */}
         <div className="lg:col-span-3 bg-white rounded-lg shadow">
           {/* Header */}
@@ -606,7 +609,7 @@ export default function ExecutiveCalendar() {
                         return (
                           <div 
                             key={idx} 
-                            className={`absolute inset-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)}`}
+                            className={`absolute left-1 right-1 top-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)}`}
                             style={{ height: `${height - 8}px` }}
                             onClick={(e) => {
                               e.stopPropagation()
