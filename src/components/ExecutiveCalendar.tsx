@@ -104,11 +104,26 @@ export default function ExecutiveCalendar() {
         }))
         setMeetings(parsedMeetings)
         console.log("📅 Loaded meetings from localStorage:", parsedMeetings.length)
+        console.log("📅 Meeting details:", parsedMeetings.map(m => ({
+          title: m.title,
+          date: m.date.toDateString(),
+          time: m.time,
+          duration: m.duration
+        })))
         serverLog("📅 Loaded meetings from localStorage: " + parsedMeetings.length)
+        serverLog("📅 Meeting details: " + JSON.stringify(parsedMeetings.map(m => ({
+          title: m.title,
+          date: m.date.toDateString(),
+          time: m.time,
+          duration: m.duration
+        }))))
       } catch (error) {
         console.error("Error loading meetings from localStorage:", error)
         serverLog("Error loading meetings from localStorage: " + error)
       }
+    } else {
+      console.log("📅 No meetings found in localStorage")
+      serverLog("📅 No meetings found in localStorage")
     }
   }, [])
   
@@ -941,7 +956,9 @@ export default function ExecutiveCalendar() {
                   const overlappingMeetings = dayMeetings.length > 2 ? dayMeetings.slice(0, 2) : dayMeetings
                   
                   console.log(`🔍 DEBUG: Time slot ${hour}:00 - Found ${dayMeetings.length} meetings, showing ${overlappingMeetings.length}`)
+                  console.log(`🔍 DEBUG: Current date being checked: ${date.toDateString()}`)
                   serverLog(`🔍 DEBUG: Time slot ${hour}:00 - Found ${dayMeetings.length} meetings, showing ${overlappingMeetings.length}`)
+                  serverLog(`🔍 DEBUG: Current date being checked: ${date.toDateString()}`)
                   
                   return (
                     <div 
