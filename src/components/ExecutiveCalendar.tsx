@@ -130,8 +130,8 @@ export default function ExecutiveCalendar() {
 // //           time: m.time,
 // //           duration: m.duration
 // //         }))))
-// //       } catch (error) {
-// //         console.error("Error loading meetings from localStorage:", error)
+      } catch (error) {
+        console.error("Error loading meetings from localStorage:", error)
         // serverLog("Error loading meetings from localStorage: " + error)
       }
     } else {
