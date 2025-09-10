@@ -344,9 +344,12 @@ export default function ExecutiveCalendar() {
     }
 
     const meetingDate = new Date(newMeeting.date)
+    const [hours, minutes] = newMeeting.time.split(':').map(Number)
+    meetingDate.setHours(hours, minutes, 0, 0)
+    
     const now = new Date()
     
-    // Check if meeting is in the past
+    // Check if meeting is in the past (considering both date and time)
     if (meetingDate < now) {
       alert('Cannot schedule meetings in the past')
       return
@@ -422,9 +425,12 @@ export default function ExecutiveCalendar() {
     }
 
     const meetingDate = new Date(newMeeting.date)
+    const [hours, minutes] = newMeeting.time.split(':').map(Number)
+    meetingDate.setHours(hours, minutes, 0, 0)
+    
     const now = new Date()
     
-    // Check if meeting is in the past
+    // Check if meeting is in the past (considering both date and time)
     if (meetingDate < now) {
       alert('Cannot schedule meetings in the past')
       return
