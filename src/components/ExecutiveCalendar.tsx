@@ -93,12 +93,6 @@ export default function ExecutiveCalendar() {
   const [meetings, setMeetings] = useState<Meeting[]>([])
   
   // Debug logging inside component where variables are available
-  useEffect(() => {
-    console.log("🔍 DEBUG: Current week:", currentWeek);
-    console.log("🔍 DEBUG: Meetings count:", meetings.length);
-    serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
-    serverLog("🔍 DEBUG: Meetings count: " + meetings.length);
-  }, [currentWeek, meetings]);
   const [newMeeting, setNewMeeting] = useState({
     title: '',
     date: '',
@@ -111,6 +105,14 @@ export default function ExecutiveCalendar() {
     description: ''
   })
 
+  
+  // Debug logging inside component where variables are available
+  useEffect(() => {
+    console.log("🔍 DEBUG: Current week:", currentWeek);
+    console.log("🔍 DEBUG: Meetings count:", meetings.length);
+    serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
+    serverLog("🔍 DEBUG: Meetings count: " + meetings.length);
+  }, [currentWeek, meetings]);
   // Load meetings from localStorage on component mount
   useEffect(() => {
   // Debug logging for terminal visibility
