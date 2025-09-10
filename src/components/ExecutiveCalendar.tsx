@@ -127,6 +127,7 @@ export default function ExecutiveCalendar() {
   }, [])
 
   // Save meetings to localStorage whenever meetings change
+  useEffect(() => {
     if (meetings.length > 0) {
       localStorage.setItem('executiveMeetings', JSON.stringify(meetings))
     }
