@@ -627,7 +627,6 @@ export default function ExecutiveCalendar() {
               Schedule Meeting
             </Button>
           </DialogTrigger>
-          </DialogTrigger>
           <Button onClick={handleAddMockMeetings} variant="outline" className="ml-2">
             <Plus className="w-4 h-4 mr-2" />
             Add Mock Meetings
