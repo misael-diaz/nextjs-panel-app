@@ -490,9 +490,9 @@ export default function ExecutiveCalendar() {
       </div>
 
       {/* La Jaula Style Calendar */}
-      <div className="flex flex-col lg:flex-row gap-6 max-w-full">
+      <div className="flex flex-col lg:flex-row gap-8 max-w-full">
         {/* Main Google-like Calendar */}
-        <div className="flex-1 lg:w-3/4 bg-white rounded-lg shadow">
+        <div className="flex-1 lg:w-3/4 bg-white rounded-lg shadow overflow-hidden max-w-none">
           {/* Header */}
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
@@ -691,19 +691,33 @@ export default function ExecutiveCalendar() {
         </div>
 
         {/* Small Calendar Widget on the Right */}
-        <div className="w-full lg:w-1/4">
-          <div className="bg-white rounded-lg shadow p-4">
+        <div className="w-full lg:w-1/4 flex-shrink-0 min-w-0">
+          <div className="bg-white rounded-lg shadow p-4 overflow-hidden">
             <div className="text-center mb-4">
               <h3 className="text-sm font-semibold text-gray-900">
                 {format(currentWeek, 'MMMM yyyy')}
               </h3>
             </div>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="w-full"
-            />
+            <div className="w-full">
+              <div className="grid grid-cols-7 gap-1 text-center">
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                  <div key={day} className="text-xs font-medium text-gray-500 p-1">
+                    {day}
+                  </div>
+                ))}
+                {Array.from({ length: 30 }, (_, i) => i + 1).map(day => (
+                  <button
+                    key={day}
+                    className={`text-xs p-1 rounded hover:bg-gray-100 ${
+                      day === 10 ? 'bg-blue-100 text-blue-800' : 'text-gray-700'
+                    }`}
+                    onClick={() => setSelectedDate(new Date(2025, 8, day))}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="mt-4 space-y-2">
               <button 
                 onClick={() => setViewMode('day')}
