@@ -318,7 +318,7 @@ export default function ExecutiveCalendar() {
     clickedDate.setHours(hour, 0, 0, 0)
     
     const dateString = clickedDate.toISOString().split('T')[0]
-    const timeString = `${String(hour).padStart(2, '0')}:00`
+    const timeString = `${String(hour).padStart(2, '0')}:00` // Always start at exact hour
     
     console.log("🔍 DEBUG: Time slot click details:")
     console.log("  - Day index:", dayIndex)
@@ -654,13 +654,35 @@ export default function ExecutiveCalendar() {
                 <Label htmlFor="time" className="text-right">
                   Time
                 </Label>
-                <Input 
-                  id="time" 
-                  type="time" 
-                  className="col-span-3"
-                  value={newMeeting.time}
-                  onChange={(e) => setNewMeeting(prev => ({ ...prev, time: e.target.value }))}
-                />
+                <Select value={newMeeting.time} onValueChange={(value) => setNewMeeting(prev => ({ ...prev, time: value }))}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="08:00">8:00 AM</SelectItem>
+                    <SelectItem value="08:30">8:30 AM</SelectItem>
+                    <SelectItem value="09:00">9:00 AM</SelectItem>
+                    <SelectItem value="09:30">9:30 AM</SelectItem>
+                    <SelectItem value="10:00">10:00 AM</SelectItem>
+                    <SelectItem value="10:30">10:30 AM</SelectItem>
+                    <SelectItem value="11:00">11:00 AM</SelectItem>
+                    <SelectItem value="11:30">11:30 AM</SelectItem>
+                    <SelectItem value="12:00">12:00 PM</SelectItem>
+                    <SelectItem value="12:30">12:30 PM</SelectItem>
+                    <SelectItem value="13:00">1:00 PM</SelectItem>
+                    <SelectItem value="13:30">1:30 PM</SelectItem>
+                    <SelectItem value="14:00">2:00 PM</SelectItem>
+                    <SelectItem value="14:30">2:30 PM</SelectItem>
+                    <SelectItem value="15:00">3:00 PM</SelectItem>
+                    <SelectItem value="15:30">3:30 PM</SelectItem>
+                    <SelectItem value="16:00">4:00 PM</SelectItem>
+                    <SelectItem value="16:30">4:30 PM</SelectItem>
+                    <SelectItem value="17:00">5:00 PM</SelectItem>
+                    <SelectItem value="17:30">5:30 PM</SelectItem>
+                    <SelectItem value="18:00">6:00 PM</SelectItem>
+                    <SelectItem value="18:30">6:30 PM</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="duration" className="text-right">
@@ -972,10 +994,9 @@ export default function ExecutiveCalendar() {
                         const durationHours = getDurationInHours(meeting.duration)
                         const height = Math.max(60 * durationHours, 60)
                         
-                        // Calculate offset based on minutes (e.g., 3:12 PM = 12 minutes offset)
+                        // Calculate offset based on minutes (only 0 or 30 minutes now)
                         const [meetingHours, meetingMinutes] = meeting.time.split(':').map(Number)
-                        const minutesOffset = meetingMinutes
-                        const topOffset = (minutesOffset / 60) * 60 // Convert minutes to pixels (60px per hour)
+                        const topOffset = meetingMinutes === 30 ? 30 : 0 // 30px for 30-minute offset, 0px for exact hour
                         
                         // Only show meeting in its starting time slot
                         const isStartingSlot = meetingHours === hour
