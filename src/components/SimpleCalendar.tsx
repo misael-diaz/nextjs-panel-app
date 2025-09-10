@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns'
+import { serverLog } from '@/lib/server-logger'
 
 interface Event {
   id: string
@@ -36,8 +37,10 @@ export default function SimpleCalendar() {
   const navigateMonth = (direction: 'prev' | 'next') => {
     if (direction === 'prev') {
       setCurrentDate(subMonths(currentDate, 1))
+      serverLog(`Calendar: Navigated to previous month (${format(subMonths(currentDate, 1), 'MMMM yyyy')})`, 'info')
     } else {
       setCurrentDate(addMonths(currentDate, 1))
+      serverLog(`Calendar: Navigated to next month (${format(addMonths(currentDate, 1), 'MMMM yyyy')})`, 'info')
     }
   }
 
@@ -48,6 +51,7 @@ export default function SimpleCalendar() {
   const handleDateClick = (date: Date) => {
     setSelectedDate(date)
     setShowEventForm(true)
+    serverLog(`Calendar: User clicked on date ${format(date, 'MMMM d, yyyy')} to create event`, 'info')
   }
 
   const handleCreateEvent = (eventData: Omit<Event, 'id'>) => {
@@ -58,6 +62,7 @@ export default function SimpleCalendar() {
     setEvents([...events, newEvent])
     setShowEventForm(false)
     setSelectedDate(null)
+    serverLog(`Calendar: Created new event "${eventData.title}" on ${format(eventData.date, 'MMMM d, yyyy')} at ${eventData.time}`, 'info')
   }
 
   return (
@@ -79,7 +84,10 @@ export default function SimpleCalendar() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentDate(new Date())}
+                onClick={() => {
+                  setCurrentDate(new Date())
+                  serverLog(`Calendar: User clicked "Today" button - navigated to current month (${format(new Date(), 'MMMM yyyy')})`, 'info')
+                }}
               >
                 Today
               </Button>
@@ -184,6 +192,9 @@ function EventForm({
         time,
         description: description.trim() || undefined
       })
+      serverLog(`Calendar: Event form submitted for "${title.trim()}" on ${format(selectedDate, 'MMMM d, yyyy')}`, 'info')
+    } else {
+      serverLog('Calendar: Event form submitted with empty title - validation failed', 'warn')
     }
   }
 
@@ -239,7 +250,10 @@ function EventForm({
               <Button type="submit" className="flex-1">
                 Create Event
               </Button>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={() => {
+                onClose()
+                serverLog('Calendar: Event form cancelled by user', 'info')
+              }}>
                 Cancel
               </Button>
             </div>
