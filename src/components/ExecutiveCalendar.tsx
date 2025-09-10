@@ -346,8 +346,6 @@ export default function ExecutiveCalendar() {
         : [...prev, filter]
     )
   }
-
-  const handleCreateMeeting = () => {
   const handleAddMockMeetings = () => {
     console.log("🔧 DEBUG: Adding mock meetings to localStorage")
     serverLog("🔧 DEBUG: Adding mock meetings to localStorage")
@@ -362,7 +360,7 @@ export default function ExecutiveCalendar() {
     serverLog("🔧 DEBUG: Added " + newMockMeetings.length + " mock meetings. Total: " + allMeetings.length)
   }
 
-    console.log("🚀 DEBUG: Starting handleCreateMeeting")
+const handleCreateMeeting = () => {
     serverLog("🚀 DEBUG: Starting handleCreateMeeting")
     
     // Enhanced validation
