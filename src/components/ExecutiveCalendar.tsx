@@ -144,11 +144,22 @@ export default function ExecutiveCalendar() {
       if (mainCalendar && smallCalendar) {
         const mainRect = mainCalendar.getBoundingClientRect();
         const smallRect = smallCalendar.getBoundingClientRect();
+        const mainStyle = window.getComputedStyle(mainCalendar);
+        const smallStyle = window.getComputedStyle(smallCalendar);
+        
         console.log("🔍 DEBUG: Element positions:");
         console.log("  - Main calendar:", mainRect);
         console.log("  - Small calendar:", smallRect);
         console.log("  - Overlap check:", mainRect.right > smallRect.left ? "⚠️ OVERLAPPING" : "✅ No overlap");
+        
+        console.log("🔍 DEBUG: Element styles:");
+        console.log("  - Main z-index:", mainStyle.zIndex, "position:", mainStyle.position);
+        console.log("  - Small z-index:", smallStyle.zIndex, "position:", smallStyle.position);
+        console.log("  - Main width:", mainStyle.width, "Small width:", smallStyle.width);
+        
         serverLog("🔍 DEBUG: Overlap check - Main right: " + mainRect.right + ", Small left: " + smallRect.left);
+        serverLog("🔍 DEBUG: Z-index - Main: " + mainStyle.zIndex + ", Small: " + smallStyle.zIndex);
+        serverLog("🔍 DEBUG: Position - Main: " + mainStyle.position + ", Small: " + smallStyle.position);
       }
       
       serverLog("🔍 DEBUG: DOM elements check completed");
