@@ -291,7 +291,7 @@ export default function SimpleCalendar() {
     setResizeStartY(event.clientY)
     setResizeStartDuration(eventData.duration || 60)
     
-    serverLog(`Calendar: Started resizing event "${eventData.title}" from ${handle}`, 'info')
+    serverLog(`Calendar: Started resizing event "${eventData.title}" from ${handle} - Start time: ${eventData.time}, Duration: ${eventData.duration || 60}`, 'info')
   }
 
   const handleResizeEnd = () => {
@@ -311,18 +311,19 @@ export default function SimpleCalendar() {
     const deltaY = event.clientY - resizeStartY
     const deltaMinutes = Math.round(deltaY) // 1 pixel = 1 minute
     
-    let newDuration = resizeStartDuration
-    
     if (resizeHandle === 'bottom') {
       // Resizing from bottom - extend/contract duration only
-      newDuration = Math.max(15, resizeStartDuration + deltaMinutes) // Minimum 15 minutes
+      const newDuration = Math.max(15, resizeStartDuration + deltaMinutes) // Minimum 15 minutes
       
-      // Update only the duration, keep start time the same
+      // Update only the duration, keep start time exactly the same
       const updatedEvent = {
         ...draggedEvent,
         duration: newDuration
+        // time stays exactly the same - no changes to start time
       }
       setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
+      
+      serverLog(`Calendar: Bottom resize - Original time: ${draggedEvent.time}, New duration: ${newDuration}`, 'info')
       
     } else if (resizeHandle === 'top') {
       // Resizing from top - adjust start time and duration
@@ -332,7 +333,7 @@ export default function SimpleCalendar() {
       
       const newStartTime = `${Math.floor(newStartMinutes / 60).toString().padStart(2, '0')}:${(newStartMinutes % 60).toString().padStart(2, '0')}`
       const durationChange = startMinutes - newStartMinutes
-      newDuration = Math.max(15, resizeStartDuration + durationChange)
+      const newDuration = Math.max(15, resizeStartDuration + durationChange)
       
       // Update the event with new start time and duration
       const updatedEvent = {
