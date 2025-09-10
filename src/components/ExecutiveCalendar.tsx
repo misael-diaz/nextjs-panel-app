@@ -244,7 +244,12 @@ export default function ExecutiveCalendar() {
     return meetings.filter(meeting => {
       const meetingDay = meeting.date.toLocaleDateString('en-US', { weekday: 'long' })
       const meetingHour = parseInt(meeting.time.split(':')[0])
-      return meetingDay === dayName && meetingHour === hour
+      const durationHours = getDurationInHours(meeting.duration)
+      
+      // Check if this time slot falls within the meeting's duration
+      return meetingDay === dayName && 
+             meetingHour <= hour && 
+             hour < meetingHour + durationHours
     })
   }
 
@@ -895,6 +900,7 @@ export default function ExecutiveCalendar() {
                   const dayMeetings = getFilteredMeetings().filter(meeting => {
                     const meetingDate = new Date(meeting.date)
                     const meetingHour = parseInt(meeting.time.split(':')[0])
+                    // Only show meeting in its starting time slot
                     return meetingDate.toDateString() === date.toDateString() && meetingHour === hour
                   })
                   
@@ -910,10 +916,13 @@ export default function ExecutiveCalendar() {
                         const durationHours = getDurationInHours(meeting.duration)
                         const height = Math.max(60 * durationHours, 60)
                         
+                        console.log(`🔍 DEBUG: Meeting "${meeting.title}" - Duration: ${meeting.duration} (${durationHours} hours), Height: ${height}px`)
+                        serverLog(`🔍 DEBUG: Meeting "${meeting.title}" - Duration: ${meeting.duration} (${durationHours} hours), Height: ${height}px`)
+                        
                         return (
                           <div 
                             key={idx} 
-                            className={`absolute left-1 right-1 top-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)} group hover:shadow-md transition-shadow`}
+                            className={`absolute left-1 right-1 top-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)} group hover:shadow-md transition-shadow z-10`}
                             style={{ height: `${height - 8}px` }}
                           >
                             <div className="flex justify-between items-start">
