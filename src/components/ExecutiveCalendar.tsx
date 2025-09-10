@@ -368,9 +368,10 @@ export default function ExecutiveCalendar() {
       return
     }
 
-    const meetingDate = new Date(newMeeting.date)
+    // Create date in local timezone to avoid UTC conversion issues
+    const [year, month, day] = newMeeting.date.split('-').map(Number)
     const [hours, minutes] = newMeeting.time.split(':').map(Number)
-    meetingDate.setHours(hours, minutes, 0, 0)
+    const meetingDate = new Date(year, month - 1, day, hours, minutes, 0, 0)
     
     const now = new Date()
     
@@ -378,6 +379,7 @@ export default function ExecutiveCalendar() {
     console.log("🔍 DEBUG: Meeting scheduling validation:")
     console.log("  - Input date:", newMeeting.date)
     console.log("  - Input time:", newMeeting.time)
+    console.log("  - Parsed year:", year, "month:", month, "day:", day)
     console.log("  - Parsed hours:", hours, "minutes:", minutes)
     console.log("  - Meeting date object:", meetingDate.toISOString())
     console.log("  - Current date object:", now.toISOString())
@@ -482,9 +484,10 @@ export default function ExecutiveCalendar() {
       return
     }
 
-    const meetingDate = new Date(newMeeting.date)
+    // Create date in local timezone to avoid UTC conversion issues
+    const [year, month, day] = newMeeting.date.split('-').map(Number)
     const [hours, minutes] = newMeeting.time.split(':').map(Number)
-    meetingDate.setHours(hours, minutes, 0, 0)
+    const meetingDate = new Date(year, month - 1, day, hours, minutes, 0, 0)
     
     const now = new Date()
     
@@ -492,6 +495,7 @@ export default function ExecutiveCalendar() {
     console.log("🔍 DEBUG: Meeting update validation:")
     console.log("  - Input date:", newMeeting.date)
     console.log("  - Input time:", newMeeting.time)
+    console.log("  - Parsed year:", year, "month:", month, "day:", day)
     console.log("  - Parsed hours:", hours, "minutes:", minutes)
     console.log("  - Meeting date object:", meetingDate.toISOString())
     console.log("  - Current date object:", now.toISOString())
