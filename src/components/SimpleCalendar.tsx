@@ -31,10 +31,53 @@ const eventColors = {
 
 export default function SimpleCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [events, setEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<Event[]>([
+    // Sample overlapping events for demonstration
+    {
+      id: '1',
+      title: 'Team Meeting',
+      date: new Date(),
+      time: '09:00',
+      duration: 60,
+      color: 'blue'
+    },
+    {
+      id: '2',
+      title: 'Client Call',
+      date: new Date(),
+      time: '09:30',
+      duration: 30,
+      color: 'green'
+    },
+    {
+      id: '3',
+      title: 'Lunch',
+      date: new Date(),
+      time: '12:00',
+      duration: 60,
+      color: 'orange'
+    },
+    {
+      id: '4',
+      title: 'Project Review',
+      date: new Date(),
+      time: '14:00',
+      duration: 90,
+      color: 'purple'
+    },
+    {
+      id: '5',
+      title: 'Quick Sync',
+      date: new Date(),
+      time: '14:30',
+      duration: 30,
+      color: 'red'
+    }
+  ])
   const [showEventForm, setShowEventForm] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [view, setView] = useState<'month' | 'week'>('week')
+  const [showOverlapWarning, setShowOverlapWarning] = useState(false)
 
   // Month view calculations
   const monthStart = startOfMonth(currentDate)
@@ -90,7 +133,7 @@ export default function SimpleCalendar() {
   }
 
   // Calculate event position and height based on time and duration
-  const getEventStyle = (event: Event) => {
+  const getEventStyle = (event: Event, dayEvents: Event[]) => {
     const [hours, minutes] = event.time.split(':').map(Number)
     const startMinutes = hours * 60 + minutes
     const duration = event.duration || 60
@@ -99,10 +142,58 @@ export default function SimpleCalendar() {
     const topOffset = startMinutes - (6 * 60) // Subtract 6 AM offset
     const height = duration
     
+    // Find overlapping events
+    const overlappingEvents = dayEvents.filter(otherEvent => {
+      if (otherEvent.id === event.id) return false
+      
+      const [otherHours, otherMinutes] = otherEvent.time.split(':').map(Number)
+      const otherStartMinutes = otherHours * 60 + otherMinutes
+      const otherDuration = otherEvent.duration || 60
+      const otherEndMinutes = otherStartMinutes + otherDuration
+      const eventEndMinutes = startMinutes + duration
+      
+      // Check if events overlap
+      return startMinutes < otherEndMinutes && eventEndMinutes > otherStartMinutes
+    })
+    
+    // Only handle up to 2 overlapping events
+    if (overlappingEvents.length > 1) {
+      // Show warning for more than 2 overlapping events
+      return {
+        top: `${Math.max(0, topOffset)}px`,
+        height: `${height}px`,
+        minHeight: '20px',
+        width: '100%',
+        left: '0%',
+        zIndex: 10,
+        backgroundColor: '#fee2e2', // Light red background
+        borderLeft: '4px solid #dc2626' // Red border
+      }
+    }
+    
+    // Handle 2 overlapping events side by side
+    if (overlappingEvents.length === 1) {
+      const otherEvent = overlappingEvents[0]
+      const isFirst = event.time <= otherEvent.time
+      
+      return {
+        top: `${Math.max(0, topOffset)}px`,
+        height: `${height}px`,
+        minHeight: '20px',
+        width: '50%',
+        left: isFirst ? '0%' : '50%',
+        zIndex: 10
+      }
+    }
+    
+    // Single event - full width
     return {
       top: `${Math.max(0, topOffset)}px`,
       height: `${height}px`,
-      minHeight: '20px' // Minimum height for visibility
+      minHeight: '20px',
+      width: '100%',
+      left: '0%',
+      zIndex: 10
     }
   }
 
@@ -370,20 +461,47 @@ export default function SimpleCalendar() {
                       {/* Events positioned absolutely */}
                       {dayEvents.map(event => {
                         const colorClass = event.color ? eventColors[event.color] : eventColors.blue
-                        const eventStyle = getEventStyle(event)
+                        const eventStyle = getEventStyle(event, dayEvents)
+                        
+                        // Check if this event has more than 2 overlapping events
+                        const overlappingEvents = dayEvents.filter(otherEvent => {
+                          if (otherEvent.id === event.id) return false
+                          
+                          const [eventHours, eventMinutes] = event.time.split(':').map(Number)
+                          const [otherHours, otherMinutes] = otherEvent.time.split(':').map(Number)
+                          const eventStartMinutes = eventHours * 60 + eventMinutes
+                          const otherStartMinutes = otherHours * 60 + otherMinutes
+                          const eventDuration = event.duration || 60
+                          const otherDuration = otherEvent.duration || 60
+                          const eventEndMinutes = eventStartMinutes + eventDuration
+                          const otherEndMinutes = otherStartMinutes + otherDuration
+                          
+                          return eventStartMinutes < otherEndMinutes && eventEndMinutes > otherStartMinutes
+                        })
+                        
+                        const hasTooManyOverlaps = overlappingEvents.length > 1
                         
                         return (
                           <div
                             key={event.id}
-                            className={`absolute left-1 right-1 ${colorClass.bg} ${colorClass.text} rounded-sm border-l-2 ${colorClass.border} cursor-pointer hover:opacity-80 transition-opacity`}
+                            className={`absolute rounded-sm border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${
+                              hasTooManyOverlaps 
+                                ? 'bg-red-100 text-red-800 border-red-200' 
+                                : `${colorClass.bg} ${colorClass.text} ${colorClass.border}`
+                            }`}
                             style={eventStyle}
                             onClick={(e) => {
                               e.stopPropagation()
+                              if (hasTooManyOverlaps) {
+                                setShowOverlapWarning(true)
+                                serverLog('Calendar: User clicked on event with too many overlaps - showing warning', 'warn')
+                              }
                               // Could add event editing here
                             }}
                           >
                             <div className="p-1 text-xs font-medium truncate">
                               {event.time} - {event.title}
+                              {hasTooManyOverlaps && ' ⚠️'}
                             </div>
                           </div>
                         )
@@ -408,6 +526,46 @@ export default function SimpleCalendar() {
             setSelectedDate(null)
           }}
         />
+      )}
+
+      {/* Overlap Warning Dialog */}
+      {showOverlapWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span className="text-yellow-500 mr-2">⚠️</span>
+                Demo Limitation
+              </h2>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-gray-600 mb-4">
+                This demo calendar supports up to 2 overlapping events displayed side by side. 
+                For more than 2 overlapping events, a production calendar would typically:
+              </p>
+              <ul className="text-sm text-gray-600 space-y-2 mb-4">
+                <li>• Stack events vertically with smaller heights</li>
+                <li>• Show a "+X more" indicator</li>
+                <li>• Allow expanding to see all events</li>
+                <li>• Provide conflict resolution tools</li>
+              </ul>
+              <p className="text-sm text-gray-500">
+                This is a demonstration of the side-by-side overlapping feature for 2 events.
+              </p>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <Button 
+                onClick={() => {
+                  setShowOverlapWarning(false)
+                  serverLog('Calendar: User closed overlap warning dialog', 'info')
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4"
+              >
+                Got it!
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
