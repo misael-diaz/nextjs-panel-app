@@ -19,6 +19,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
   duration: string
+  id: string
+  title: string
+  date: Date
+  time: string
+  duration: string
   attendees: string[]
   location: string
   type: 'board' | 'executive' | 'client' | 'internal'
@@ -26,8 +31,6 @@ import { Label } from '@/components/ui/label'
   description: string
 }
 
-// Generate mock meetings for today and tomorrow
-// const today = new Date()
 // const tomorrow = new Date(today)
 // tomorrow.setDate(tomorrow.getDate() + 1)
 
