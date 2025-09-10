@@ -87,6 +87,7 @@ export default function SimpleCalendar() {
   const [resizeHandle, setResizeHandle] = useState<'top' | 'bottom' | null>(null)
   const [resizeStartY, setResizeStartY] = useState(0)
   const [resizeStartDuration, setResizeStartDuration] = useState(0)
+  const [resizeStartTime, setResizeStartTime] = useState('')
 
   // Month view calculations
   const monthStart = startOfMonth(currentDate)
@@ -280,7 +281,7 @@ export default function SimpleCalendar() {
     }
   }
 
-  // Resize handlers
+  // Simplified resize handlers
   const handleResizeStart = (event: React.MouseEvent, eventData: Event, handle: 'top' | 'bottom') => {
     event.preventDefault()
     event.stopPropagation()
@@ -290,6 +291,7 @@ export default function SimpleCalendar() {
     setResizeHandle(handle)
     setResizeStartY(event.clientY)
     setResizeStartDuration(eventData.duration || 60)
+    setResizeStartTime(eventData.time)
     
     serverLog(`Calendar: Started resizing event "${eventData.title}" from ${handle} - Start time: ${eventData.time}, Duration: ${eventData.duration || 60}`, 'info')
   }
@@ -301,6 +303,7 @@ export default function SimpleCalendar() {
       setDraggedEvent(null)
       setResizeStartY(0)
       setResizeStartDuration(0)
+      setResizeStartTime('')
       serverLog(`Calendar: Finished resizing event "${draggedEvent.title}"`, 'info')
     }
   }
@@ -312,36 +315,30 @@ export default function SimpleCalendar() {
     const deltaMinutes = Math.round(deltaY) // 1 pixel = 1 minute
     
     if (resizeHandle === 'bottom') {
-      // Resizing from bottom - extend/contract duration only
-      const newDuration = Math.max(15, resizeStartDuration + deltaMinutes) // Minimum 15 minutes
+      // Bottom resize: only change duration, keep start time fixed
+      const newDuration = Math.max(15, resizeStartDuration + deltaMinutes)
       
-      // Update only the duration, keep start time exactly the same
-      const updatedEvent = {
-        ...draggedEvent,
-        duration: newDuration
-        // time stays exactly the same - no changes to start time
-      }
-      setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
-      
-      serverLog(`Calendar: Bottom resize - Original time: ${draggedEvent.time}, New duration: ${newDuration}`, 'info')
+      setEvents(events.map(e => 
+        e.id === draggedEvent.id 
+          ? { ...e, duration: newDuration }
+          : e
+      ))
       
     } else if (resizeHandle === 'top') {
-      // Resizing from top - adjust start time and duration
-      const [hours, minutes] = draggedEvent.time.split(':').map(Number)
+      // Top resize: change start time and adjust duration
+      const [hours, minutes] = resizeStartTime.split(':').map(Number)
       const startMinutes = hours * 60 + minutes
-      const newStartMinutes = Math.max(6 * 60, startMinutes + deltaMinutes) // Don't go before 6 AM
+      const newStartMinutes = Math.max(6 * 60, startMinutes + deltaMinutes)
       
       const newStartTime = `${Math.floor(newStartMinutes / 60).toString().padStart(2, '0')}:${(newStartMinutes % 60).toString().padStart(2, '0')}`
       const durationChange = startMinutes - newStartMinutes
       const newDuration = Math.max(15, resizeStartDuration + durationChange)
       
-      // Update the event with new start time and duration
-      const updatedEvent = {
-        ...draggedEvent,
-        time: newStartTime,
-        duration: newDuration
-      }
-      setEvents(events.map(e => e.id === draggedEvent.id ? updatedEvent : e))
+      setEvents(events.map(e => 
+        e.id === draggedEvent.id 
+          ? { ...e, time: newStartTime, duration: newDuration }
+          : e
+      ))
     }
   }
 
@@ -689,12 +686,13 @@ export default function SimpleCalendar() {
                           >
                             {/* Top resize handle */}
                             <div
-                              className="absolute top-0 left-0 right-0 h-3 cursor-ns-resize hover:bg-black hover:bg-opacity-30 transition-colors border-t border-black border-opacity-20"
+                              className="absolute top-0 left-0 right-0 h-4 cursor-ns-resize hover:bg-blue-500 hover:bg-opacity-50 transition-colors border-t-2 border-blue-400"
                               onMouseDown={(e) => handleResizeStart(e, event, 'top')}
+                              title="Resize from top (changes start time)"
                             />
                             
                             {/* Event content */}
-                            <div className="p-1 text-xs font-medium truncate select-none mt-3 mb-3">
+                            <div className="p-1 text-xs font-medium truncate select-none mt-4 mb-4">
                               {event.time} - {event.title}
                               {hasTooManyOverlaps && ' ⚠️'}
                               {isResizing && draggedEvent?.id === event.id && (
@@ -706,8 +704,9 @@ export default function SimpleCalendar() {
                             
                             {/* Bottom resize handle */}
                             <div
-                              className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize hover:bg-black hover:bg-opacity-30 transition-colors border-b border-black border-opacity-20"
+                              className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize hover:bg-green-500 hover:bg-opacity-50 transition-colors border-b-2 border-green-400"
                               onMouseDown={(e) => handleResizeStart(e, event, 'bottom')}
+                              title="Resize from bottom (changes duration only)"
                             />
                           </div>
                         )
