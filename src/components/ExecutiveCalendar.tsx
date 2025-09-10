@@ -5,10 +5,6 @@ serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fi
 console.log("🔍 DEBUG: Grid layout classes:", "grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden");
 console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().toISOString());
 serverLog("🔍 DEBUG: ExecutiveCalendar component rendered at: " + new Date().toISOString());
-console.log("🔍 DEBUG: Current week:", currentWeek);
-console.log("🔍 DEBUG: Meetings count:", meetings.length);
-console.log("🔍 DEBUG: Main calendar classes:", "lg:col-span-3 bg-white rounded-lg shadow");
-console.log("🔍 DEBUG: Small calendar classes:", "lg:col-span-1");
 
 import { useState, useEffect } from 'react'
 import { Calendar } from '@/components/ui/calendar'
@@ -95,6 +91,14 @@ export default function ExecutiveCalendar() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{day: number, hour: number} | null>(null)
   const [meetings, setMeetings] = useState<Meeting[]>([])
+  
+  // Debug logging inside component where variables are available
+  useEffect(() => {
+    console.log("🔍 DEBUG: Current week:", currentWeek);
+    console.log("🔍 DEBUG: Meetings count:", meetings.length);
+    serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
+    serverLog("🔍 DEBUG: Meetings count: " + meetings.length);
+  }, [currentWeek, meetings]);
   const [newMeeting, setNewMeeting] = useState({
     title: '',
     date: '',

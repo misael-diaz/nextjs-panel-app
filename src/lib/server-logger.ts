@@ -1,7 +1,7 @@
 // Utility to send client-side logs to server
 export const serverLog = async (message: string, level: 'info' | 'warn' | 'error' = 'info') => {
   try {
-    await fetch('/api/logs', {
+    await fetch('http://localhost:3001/api/logs', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
