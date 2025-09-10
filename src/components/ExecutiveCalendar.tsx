@@ -916,14 +916,22 @@ export default function ExecutiveCalendar() {
                         const durationHours = getDurationInHours(meeting.duration)
                         const height = Math.max(60 * durationHours, 60)
                         
-                        console.log(`🔍 DEBUG: Meeting "${meeting.title}" - Duration: ${meeting.duration} (${durationHours} hours), Height: ${height}px`)
-                        serverLog(`🔍 DEBUG: Meeting "${meeting.title}" - Duration: ${meeting.duration} (${durationHours} hours), Height: ${height}px`)
+                        // Calculate offset based on minutes (e.g., 3:12 PM = 12 minutes offset)
+                        const [meetingHours, meetingMinutes] = meeting.time.split(':').map(Number)
+                        const minutesOffset = meetingMinutes
+                        const topOffset = (minutesOffset / 60) * 60 // Convert minutes to pixels (60px per hour)
+                        
+                        console.log(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Minutes offset: ${minutesOffset}, Top offset: ${topOffset}px`)
+                        serverLog(`🔍 DEBUG: Meeting "${meeting.title}" - Time: ${meeting.time}, Minutes offset: ${minutesOffset}, Top offset: ${topOffset}px`)
                         
                         return (
                           <div 
                             key={idx} 
-                            className={`absolute left-1 right-1 top-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)} group hover:shadow-md transition-shadow z-10`}
-                            style={{ height: `${height - 8}px` }}
+                            className={`absolute left-1 right-1 rounded text-xs p-2 border-l-4 ${getMeetingColor(meeting.type)} group hover:shadow-md transition-shadow z-10`}
+                            style={{ 
+                              height: `${height - 8}px`,
+                              top: `${topOffset + 4}px` // 4px for padding
+                            }}
                           >
                             <div className="flex justify-between items-start">
                               <div className="flex-1 min-w-0" onClick={(e) => {
