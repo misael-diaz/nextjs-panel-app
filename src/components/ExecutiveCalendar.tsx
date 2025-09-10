@@ -2,7 +2,7 @@
 import { serverLog } from "@/lib/server-logger";
 console.log("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
 serverLog("🎯 EXECUTIVE CALENDAR - LATEST VERSION LOADED - Calendar overlap fix applied! 🚀");
-console.log("🔍 DEBUG: Grid layout classes:", "grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden");
+console.log("🔍 DEBUG: Grid layout classes:", "flex flex-col lg:flex-row gap-6 max-w-full");
 console.log("🔍 DEBUG: ExecutiveCalendar component rendered at:", new Date().toISOString());
 serverLog("🔍 DEBUG: ExecutiveCalendar component rendered at: " + new Date().toISOString());
 
@@ -108,6 +108,15 @@ export default function ExecutiveCalendar() {
   
   // Debug logging inside component where variables are available
   useEffect(() => {
+  
+  // Debug layout information
+  useEffect(() => {
+    console.log("🔍 DEBUG: Layout structure:");
+    console.log("  - Main container: flex flex-col lg:flex-row gap-6 max-w-full");
+    console.log("  - Main calendar: flex-1 lg:w-3/4 bg-white rounded-lg shadow");
+    console.log("  - Small calendar: w-full lg:w-1/4");
+    serverLog("🔍 DEBUG: Layout structure - Main: lg:col-span-3, Small: w-full lg:w-1/4");
+  }, []);
     console.log("🔍 DEBUG: Current week:", currentWeek);
     console.log("🔍 DEBUG: Meetings count:", meetings.length);
     serverLog("🔍 DEBUG: Current week: " + currentWeek.toDateString());
@@ -438,9 +447,9 @@ export default function ExecutiveCalendar() {
       </div>
 
       {/* La Jaula Style Calendar */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-6 max-w-full">
         {/* Main Calendar */}
-        <div className="lg:col-span-3 bg-white rounded-lg shadow">
+        <div className="flex-1 lg:w-3/4 bg-white rounded-lg shadow">
           {/* Header */}
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
@@ -639,7 +648,7 @@ export default function ExecutiveCalendar() {
         </div>
 
         {/* Small Calendar Widget */}
-        <div className="lg:col-span-1">
+        <div className="w-full lg:w-1/4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-center mb-4">
               <h3 className="text-sm font-semibold text-gray-900">
