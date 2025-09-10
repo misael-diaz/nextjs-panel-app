@@ -33,15 +33,15 @@ interface Meeting {
 }
 
 // Generate mock meetings for today and tomorrow
-const today = new Date()
-const tomorrow = new Date(today)
-tomorrow.setDate(tomorrow.getDate() + 1)
+// const today = new Date()
+// const tomorrow = new Date(today)
+// tomorrow.setDate(tomorrow.getDate() + 1)
 
 const mockMeetings: Meeting[] = [
   {
     id: '1',
     title: 'Board of Directors Meeting',
-    date: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0), // September 15, 2024
+    date: new Date(2025, 8, 10, 10, 0), // September 15, 2024
     time: '10:00 AM',
     duration: '2 hours',
     attendees: ['CEO', 'CFO', 'CTO', 'Board Members'],
@@ -53,7 +53,7 @@ const mockMeetings: Meeting[] = [
   {
     id: '2',
     title: 'Client Presentation - Nike Partnership',
-    date: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0), // September 18, 2024
+    date: new Date(2025, 8, 10, 14, 0), // September 18, 2024
     time: '2:00 PM',
     duration: '1.5 hours',
     attendees: ['CEO', 'Sales Director', 'Nike Representatives'],
@@ -65,7 +65,7 @@ const mockMeetings: Meeting[] = [
   {
     id: '3',
     title: 'Executive Team Weekly Sync',
-    date: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 9, 0), // September 20, 2024
+    date: new Date(2025, 8, 11, 9, 0), // September 20, 2024
     time: '9:00 AM',
     duration: '1 hour',
     attendees: ['CEO', 'CFO', 'CTO', 'COO'],
@@ -77,7 +77,7 @@ const mockMeetings: Meeting[] = [
   {
     id: '4',
     title: 'Q4 Planning Session',
-    date: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 13, 0), // September 25, 2024
+    date: new Date(2025, 8, 11, 13, 0), // September 25, 2024
     time: '1:00 PM',
     duration: '3 hours',
     attendees: ['All Department Heads'],
