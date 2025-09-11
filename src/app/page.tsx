@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import OrderManagement from '@/components/OrderManagement'
 import SimpleCalendar from '@/components/SimpleCalendar'
+import { products, getLowStockProducts, getTotalInventoryValue, getTotalStockCount, getProductsByCategory } from '@/data/products'
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -58,6 +59,10 @@ export default function Dashboard() {
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
+  const lowStockProducts = getLowStockProducts(50)
+  const totalInventoryValue = getTotalInventoryValue()
+  const totalStockCount = getTotalStockCount()
+  
   const stats = [
     {
       title: 'Customers',
@@ -75,15 +80,15 @@ export default function Dashboard() {
     },
     {
       title: 'Inventory',
-      value: '2,156',
-      change: '-45 items low stock',
-      changeType: 'negative',
-      percentage: '3%'
+      value: totalStockCount.toLocaleString(),
+      change: `${lowStockProducts.length} items low stock`,
+      changeType: lowStockProducts.length > 0 ? 'negative' : 'positive',
+      percentage: `${Math.round((lowStockProducts.length / products.length) * 100)}%`
     },
     {
-      title: 'Monthly Sales',
-      value: '$24,580',
-      change: '+$3,200 this month',
+      title: 'Inventory Value',
+      value: `$${totalInventoryValue.toLocaleString()}`,
+      change: `$${Math.round(totalInventoryValue * 0.15).toLocaleString()} this month`,
       changeType: 'positive',
       percentage: '15%'
     }
@@ -250,8 +255,174 @@ export default function Dashboard() {
             <OrderManagement />
           )}
 
+          {/* Products/Inventory Tab */}
+          {activeTab === 'products' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-900">Products & Inventory</h3>
+                  <p className="text-gray-600">Manage your product catalog and inventory levels</p>
+                </div>
+                <Button className="bg-primary hover:bg-primary/90 text-white">
+                  Add Product
+                </Button>
+              </div>
+
+              {/* Inventory Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Total Products</p>
+                        <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+                      </div>
+                      <Package className="h-8 w-8 text-blue-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Total Stock</p>
+                        <p className="text-2xl font-bold text-gray-900">{totalStockCount.toLocaleString()}</p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-green-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Low Stock</p>
+                        <p className="text-2xl font-bold text-red-600">{lowStockProducts.length}</p>
+                      </div>
+                      <TrendingDown className="h-8 w-8 text-red-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Inventory Value</p>
+                        <p className="text-2xl font-bold text-gray-900">${totalInventoryValue.toLocaleString()}</p>
+                      </div>
+                      <Tag className="h-8 w-8 text-purple-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Low Stock Alert */}
+              {lowStockProducts.length > 0 && (
+                <Card className="border-red-200 bg-red-50">
+                  <CardHeader>
+                    <CardTitle className="text-red-800 flex items-center">
+                      <TrendingDown className="h-5 w-5 mr-2" />
+                      Low Stock Alert
+                    </CardTitle>
+                    <CardDescription className="text-red-700">
+                      {lowStockProducts.length} products are running low on stock
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {lowStockProducts.slice(0, 3).map((product) => (
+                        <div key={product.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                          <div>
+                            <p className="font-medium text-gray-900">{product.name}</p>
+                            <p className="text-sm text-gray-600">SKU: {product.sku}</p>
+                          </div>
+                          <Badge variant="destructive">{product.stock} left</Badge>
+                        </div>
+                      ))}
+                      {lowStockProducts.length > 3 && (
+                        <p className="text-sm text-red-600 font-medium">
+                          +{lowStockProducts.length - 3} more products with low stock
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Products Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Products</CardTitle>
+                  <CardDescription>Complete inventory overview</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-3 font-medium text-gray-600">Product</th>
+                          <th className="text-left p-3 font-medium text-gray-600">Category</th>
+                          <th className="text-left p-3 font-medium text-gray-600">SKU</th>
+                          <th className="text-left p-3 font-medium text-gray-600">Price</th>
+                          <th className="text-left p-3 font-medium text-gray-600">Stock</th>
+                          <th className="text-left p-3 font-medium text-gray-600">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {products.map((product) => (
+                          <tr key={product.id} className="border-b hover:bg-gray-50">
+                            <td className="p-3">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                                  <Package className="h-5 w-5 text-gray-500" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{product.name}</p>
+                                  <p className="text-sm text-gray-600">{product.colors.join(', ')}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3 text-gray-600">{product.category}</td>
+                            <td className="p-3 text-gray-600 font-mono text-sm">{product.sku}</td>
+                            <td className="p-3">
+                              <div>
+                                <p className="font-medium text-gray-900">{product.price}</p>
+                                {product.originalPrice && (
+                                  <p className="text-sm text-gray-500 line-through">{product.originalPrice}</p>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <span className={`font-medium ${
+                                product.stock <= 50 ? 'text-red-600' : 
+                                product.stock <= 100 ? 'text-yellow-600' : 'text-green-600'
+                              }`}>
+                                {product.stock}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              {product.badge && (
+                                <Badge className={
+                                  product.badge === 'New' ? 'bg-green-100 text-green-800' :
+                                  product.badge === 'Sale' ? 'bg-red-100 text-red-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }>
+                                  {product.badge}
+                                </Badge>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Other tabs content */}
-          {activeTab !== 'dashboard' && activeTab !== 'calendar' && activeTab !== 'orders' && (
+          {activeTab !== 'dashboard' && activeTab !== 'calendar' && activeTab !== 'orders' && activeTab !== 'products' && (
             <Card>
               <CardHeader>
                 <CardTitle>
