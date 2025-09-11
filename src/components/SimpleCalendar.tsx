@@ -965,7 +965,7 @@ export default function SimpleCalendar() {
                 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-medium"
               >
-                Understood
+                OK
               </Button>
             </div>
           </div>
