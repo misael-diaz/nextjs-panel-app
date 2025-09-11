@@ -1019,13 +1019,14 @@ function EventForm({
   const [description, setDescription] = useState(editingEvent?.description || '')
   const [duration, setDuration] = useState(editingEvent?.duration || 60) // Default 1 hour
   const [color, setColor] = useState<Event['color']>(editingEvent?.color || 'blue')
+  const [date, setDate] = useState(editingEvent?.date || selectedDate)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (title.trim()) {
       const eventData = {
         title: title.trim(),
-        date: selectedDate,
+        date: date,
         time,
         description: description.trim() || undefined,
         duration,
@@ -1034,10 +1035,10 @@ function EventForm({
       
       if (editingEvent && onUpdateEvent) {
         onUpdateEvent(eventData)
-        serverLog(`Calendar: Event form updated for "${title.trim()}" on ${format(selectedDate, 'MMMM d, yyyy')} for ${duration} minutes`, 'info')
+        serverLog(`Calendar: Event form updated for "${title.trim()}" on ${format(date, 'MMMM d, yyyy')} for ${duration} minutes`, 'info')
       } else {
         onCreateEvent(eventData)
-        serverLog(`Calendar: Event form submitted for "${title.trim()}" on ${format(selectedDate, 'MMMM d, yyyy')} for ${duration} minutes`, 'info')
+        serverLog(`Calendar: Event form submitted for "${title.trim()}" on ${format(date, 'MMMM d, yyyy')} for ${duration} minutes`, 'info')
       }
     } else {
       serverLog('Calendar: Event form submitted with empty title - validation failed', 'warn')
@@ -1055,11 +1056,19 @@ function EventForm({
         </div>
         
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-          {/* Date Display */}
-          <div className="bg-gray-50 p-3 rounded-md">
-            <div className="text-sm font-medium text-gray-700">Date</div>
-            <div className="text-sm text-gray-600">
-              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+          {/* Date Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date
+            </label>
+            <input
+              type="date"
+              value={format(date, 'yyyy-MM-dd')}
+              onChange={(e) => setDate(new Date(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <div className="text-xs text-gray-500 mt-1">
+              {format(date, 'EEEE, MMMM d, yyyy')}
             </div>
           </div>
           
