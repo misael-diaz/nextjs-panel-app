@@ -510,6 +510,32 @@ export default function SimpleCalendar() {
     
     const newTime = calculateDropTime(relativeY)
     
+    // Check for overlapping events before dropping (excluding the current dragged event)
+    const dayEvents = getEventsForDate(targetDate).filter(e => e.id !== draggedEvent.id)
+    const [eventHours, eventMinutes] = newTime.split(':').map(Number)
+    const eventStartMinutes = eventHours * 60 + eventMinutes
+    const eventDuration = draggedEvent.duration || 60
+    const eventEndMinutes = eventStartMinutes + eventDuration
+    
+    // Find overlapping events
+    const overlappingEvents = dayEvents.filter(existingEvent => {
+      const [existingHours, existingMinutes] = existingEvent.time.split(':').map(Number)
+      const existingStartMinutes = existingHours * 60 + existingMinutes
+      const existingDuration = existingEvent.duration || 60
+      const existingEndMinutes = existingStartMinutes + existingDuration
+      
+      // Check if events overlap
+      return eventStartMinutes < existingEndMinutes && eventEndMinutes > existingStartMinutes
+    })
+    
+    // If there are already 2 overlapping events, prevent drop and show warning
+    if (overlappingEvents.length >= 2) {
+      setShowOverlapWarning(true)
+      serverLog(`Calendar: Prevented drag-and-drop of event "${draggedEvent.title}" - would create third overlap`, 'warn')
+      handleDragEnd()
+      return
+    }
+    
     // Update the event
     const updatedEvent = {
       ...draggedEvent,
