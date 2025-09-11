@@ -221,7 +221,15 @@ export default function SimpleCalendar() {
     const sortedOverlappingEvents = overlappingEvents.sort((a, b) => {
       const [aHours, aMinutes] = a.time.split(':').map(Number)
       const [bHours, bMinutes] = b.time.split(':').map(Number)
-      return (aHours * 60 + aMinutes) - (bHours * 60 + bMinutes)
+      const aStartMinutes = aHours * 60 + aMinutes
+      const bStartMinutes = bHours * 60 + bMinutes
+      
+      // If start times are the same, use event ID as tie-breaker for consistent positioning
+      if (aStartMinutes === bStartMinutes) {
+        return a.id.localeCompare(b.id)
+      }
+      
+      return aStartMinutes - bStartMinutes
     })
     
     // Only handle up to 2 overlapping events
@@ -245,7 +253,15 @@ export default function SimpleCalendar() {
       const allEventsInTimeRange = [event, ...overlappingEvents].sort((a, b) => {
         const [aHours, aMinutes] = a.time.split(':').map(Number)
         const [bHours, bMinutes] = b.time.split(':').map(Number)
-        return (aHours * 60 + aMinutes) - (bHours * 60 + bMinutes)
+        const aStartMinutes = aHours * 60 + aMinutes
+        const bStartMinutes = bHours * 60 + bMinutes
+        
+        // If start times are the same, use event ID as tie-breaker for consistent positioning
+        if (aStartMinutes === bStartMinutes) {
+          return a.id.localeCompare(b.id)
+        }
+        
+        return aStartMinutes - bStartMinutes
       })
       
       const eventIndex = allEventsInTimeRange.findIndex(e => e.id === event.id)
