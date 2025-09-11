@@ -37,6 +37,7 @@ export default function SimpleCalendar() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [view, setView] = useState<'month' | 'week'>('week')
   const [showOverlapWarning, setShowOverlapWarning] = useState(false)
+  const [pendingEventData, setPendingEventData] = useState<Omit<Event, 'id'> | null>(null)
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -340,6 +341,7 @@ export default function SimpleCalendar() {
     
     // If there are already 2 overlapping events, prevent creation and show warning
     if (overlappingEvents.length >= 2) {
+      setPendingEventData(eventData)
       setShowOverlapWarning(true)
       serverLog(`Calendar: Prevented creation of third overlapping event "${eventData.title}" - demo limitation`, 'warn')
       return
@@ -415,6 +417,29 @@ export default function SimpleCalendar() {
       setEvents(events.filter(e => e.id !== eventId))
       serverLog(`Calendar: Deleted event "${eventToDelete.title}"`, 'info')
     }
+  }
+
+  const handleCreateEventWithNewDate = (newDate: Date) => {
+    if (!pendingEventData) return
+
+    const colors = Object.keys(eventColors) as Array<keyof typeof eventColors>
+    const randomColor = colors[Math.floor(Math.random() * colors.length)]
+    
+    const newEvent: Event = {
+      ...pendingEventData,
+      id: Date.now().toString(),
+      date: newDate,
+      color: randomColor,
+      duration: pendingEventData.duration || 60
+    }
+    
+    setEvents([...events, newEvent])
+    setShowOverlapWarning(false)
+    setPendingEventData(null)
+    setShowEventForm(false)
+    setSelectedDate(null)
+    setEditingEvent(null)
+    serverLog(`Calendar: Created event "${pendingEventData.title}" on new date ${format(newDate, 'MMMM d, yyyy')} to avoid overlap`, 'info')
   }
 
   // Drag and drop handlers
@@ -917,59 +942,16 @@ export default function SimpleCalendar() {
       )}
 
       {/* Overlap Warning Dialog */}
-      {showOverlapWarning && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl">
-            <div className="px-8 py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <span className="text-red-500 mr-3 text-2xl">🚫</span>
-                Demo Limitation - Cannot Create Event
-              </h2>
-            </div>
-            <div className="px-8 py-6">
-              <div className="bg-red-50 border border-red-200 rounded-md p-6 mb-6">
-                <p className="text-red-800 font-semibold mb-3 text-lg">
-                  This demo calendar only supports up to 2 overlapping events.
-                </p>
-                <p className="text-red-700 text-base">
-                  You already have 2 events overlapping at this time. Creating a third overlapping event is not allowed in this demonstration.
-                </p>
-              </div>
-              
-              <p className="text-gray-700 mb-4 text-lg font-semibold">
-                What you can do:
-              </p>
-              <ul className="text-base text-gray-600 space-y-3 mb-6">
-                <li>• Choose a different time slot that doesn't overlap</li>
-                <li>• Edit one of the existing events to change its time</li>
-                <li>• Delete one of the existing overlapping events</li>
-              </ul>
-              
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-6">
-                <p className="text-blue-800 text-base font-semibold mb-3">
-                  In a production calendar system:
-                </p>
-                <ul className="text-base text-blue-700 space-y-2">
-                  <li>• Events would stack vertically with smaller heights</li>
-                  <li>• Show a "+X more" indicator for additional events</li>
-                  <li>• Provide conflict resolution and scheduling tools</li>
-                  <li>• Allow expanding to see all overlapping events</li>
-                </ul>
-              </div>
-            </div>
-            <div className="px-8 py-6 border-t border-gray-200 flex justify-end">
-              <Button 
-                onClick={() => {
-                  setShowOverlapWarning(false)
-                  serverLog('Calendar: User closed overlap prevention warning dialog', 'info')
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-medium"
-              >
-                OK
-              </Button>
-            </div>
-          </div>
-        </div>
+      {showOverlapWarning && pendingEventData && (
+        <OverlapWarningDialog
+          pendingEventData={pendingEventData}
+          onClose={() => {
+            setShowOverlapWarning(false)
+            setPendingEventData(null)
+            serverLog('Calendar: User closed overlap prevention warning dialog', 'info')
+          }}
+          onCreateWithNewDate={handleCreateEventWithNewDate}
+        />
       )}
 
       {/* Dragging Ghost Event */}
@@ -1165,6 +1147,99 @@ function EventForm({
             className="bg-blue-600 hover:bg-blue-700 text-white px-4"
           >
             {editingEvent ? 'Update' : 'Save'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Overlap Warning Dialog Component with Date Picker
+function OverlapWarningDialog({ 
+  pendingEventData, 
+  onClose, 
+  onCreateWithNewDate 
+}: { 
+  pendingEventData: Omit<Event, 'id'>
+  onClose: () => void
+  onCreateWithNewDate: (newDate: Date) => void
+}) {
+  const [selectedNewDate, setSelectedNewDate] = useState(pendingEventData.date)
+
+  const handleCreateWithNewDate = () => {
+    onCreateWithNewDate(selectedNewDate)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl">
+        <div className="px-8 py-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+            <span className="text-red-500 mr-3 text-2xl">🚫</span>
+            Demo Limitation - Cannot Create Event
+          </h2>
+        </div>
+        <div className="px-8 py-6">
+          <div className="bg-red-50 border border-red-200 rounded-md p-6 mb-6">
+            <p className="text-red-800 font-semibold mb-3 text-lg">
+              This demo calendar only supports up to 2 overlapping events.
+            </p>
+            <p className="text-red-700 text-base">
+              You already have 2 events overlapping at this time. Creating a third overlapping event is not allowed in this demonstration.
+            </p>
+          </div>
+          
+          <div className="bg-green-50 border border-green-200 rounded-md p-6 mb-6">
+            <p className="text-green-800 font-semibold mb-3 text-lg">
+              Quick Solution: Change the Date
+            </p>
+            <p className="text-green-700 text-base mb-4">
+              Create your event on a different date to avoid the overlap:
+            </p>
+            <div className="flex items-center gap-4">
+              <label className="text-green-800 font-medium">New Date:</label>
+              <input
+                type="date"
+                value={format(selectedNewDate, 'yyyy-MM-dd')}
+                onChange={(e) => setSelectedNewDate(new Date(e.target.value))}
+                className="px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+              <Button
+                onClick={handleCreateWithNewDate}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+              >
+                Create on New Date
+              </Button>
+            </div>
+          </div>
+          
+          <p className="text-gray-700 mb-4 text-lg font-semibold">
+            Other options:
+          </p>
+          <ul className="text-base text-gray-600 space-y-3 mb-6">
+            <li>• Choose a different time slot that doesn't overlap</li>
+            <li>• Edit one of the existing events to change its time</li>
+            <li>• Delete one of the existing overlapping events</li>
+          </ul>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-6">
+            <p className="text-blue-800 text-base font-semibold mb-3">
+              In a production calendar system:
+            </p>
+            <ul className="text-base text-blue-700 space-y-2">
+              <li>• Events would stack vertically with smaller heights</li>
+              <li>• Show a "+X more" indicator for additional events</li>
+              <li>• Provide conflict resolution and scheduling tools</li>
+              <li>• Allow expanding to see all overlapping events</li>
+            </ul>
+          </div>
+        </div>
+        <div className="px-8 py-6 border-t border-gray-200 flex justify-end">
+          <Button 
+            onClick={onClose}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-medium"
+          >
+            Cancel
           </Button>
         </div>
       </div>
