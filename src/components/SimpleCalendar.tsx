@@ -42,7 +42,11 @@ export default function SimpleCalendar() {
   const [isDragging, setIsDragging] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [dropIndicator, setDropIndicator] = useState<{ day: Date; time: string } | null>(null)
-  // Resize functionality completely removed
+  // Resize functionality for duration modification only
+  const [isResizing, setIsResizing] = useState(false)
+  const [resizeStartY, setResizeStartY] = useState(0)
+  const [resizeStartDuration, setResizeStartDuration] = useState(0)
+  const [resizingEvent, setResizingEvent] = useState<Event | null>(null)
 
   // localStorage functions
   const saveEventsToStorage = (eventsToSave: Event[]) => {
@@ -335,6 +339,8 @@ export default function SimpleCalendar() {
 
   // Drag and drop handlers
   const handleDragStart = (event: React.MouseEvent, eventData: Event) => {
+    if (isResizing) return // Don't start dragging if we're resizing
+    
     event.preventDefault()
     setDraggedEvent(eventData)
     setIsDragging(true)
@@ -358,7 +364,44 @@ export default function SimpleCalendar() {
     }
   }
 
-  // Resize handlers completely removed
+  // Resize handlers for duration modification only (no position shifting)
+  const handleResizeStart = (event: React.MouseEvent, eventData: Event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    
+    setResizingEvent(eventData)
+    setIsResizing(true)
+    setResizeStartY(event.clientY)
+    setResizeStartDuration(eventData.duration || 60)
+    
+    serverLog(`Calendar: Started resizing event "${eventData.title}" - Duration: ${eventData.duration || 60}`, 'info')
+  }
+
+  const handleResizeEnd = () => {
+    if (isResizing && resizingEvent) {
+      setIsResizing(false)
+      setResizingEvent(null)
+      setResizeStartY(0)
+      setResizeStartDuration(0)
+      serverLog(`Calendar: Finished resizing event "${resizingEvent.title}"`, 'info')
+    }
+  }
+
+  const handleResize = (event: React.MouseEvent) => {
+    if (!isResizing || !resizingEvent) return
+
+    const deltaY = event.clientY - resizeStartY
+    const deltaMinutes = Math.round(deltaY) // 1 pixel = 1 minute
+    
+    // Only change duration, keep start time fixed
+    const newDuration = Math.max(15, resizeStartDuration + deltaMinutes)
+    
+    setEvents(events.map(e => 
+      e.id === resizingEvent.id 
+        ? { ...e, duration: newDuration }
+        : e
+    ))
+  }
 
   const calculateDropTime = (relativeY: number) => {
     const timeSlotHeight = 60 // pixels per hour
@@ -404,9 +447,20 @@ export default function SimpleCalendar() {
   return (
     <div 
       className="w-full max-w-7xl mx-auto bg-white h-[calc(100vh-200px)] flex flex-col"
-      onMouseUp={handleDragEnd}
-      onMouseLeave={handleDragEnd}
-      onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+      onMouseUp={(e) => {
+        handleDragEnd()
+        handleResizeEnd()
+      }}
+      onMouseLeave={(e) => {
+        handleDragEnd()
+        handleResizeEnd()
+      }}
+      onMouseMove={(e) => {
+        setMousePosition({ x: e.clientX, y: e.clientY })
+        if (isResizing) {
+          handleResize(e)
+        }
+      }}
     >
       {/* Google Calendar-style Header */}
       <div className="border-b border-gray-200 bg-white px-6 py-4">
@@ -675,7 +729,7 @@ export default function SimpleCalendar() {
                               hasTooManyOverlaps 
                                 ? 'bg-red-100 text-red-800 border-red-200' 
                                 : `${colorClass.bg} ${colorClass.text} ${colorClass.border}`
-                            } ${isBeingDragged ? 'opacity-50 scale-105 shadow-lg' : ''}`}
+                            } ${isBeingDragged ? 'opacity-50 scale-105 shadow-lg' : ''} ${isResizing && resizingEvent?.id === event.id ? 'pointer-events-none' : ''}`}
                             style={eventStyle}
                             onMouseDown={(e) => handleDragStart(e, event)}
                             onClick={(e) => {
@@ -721,6 +775,13 @@ export default function SimpleCalendar() {
                                 </button>
                               </div>
                             </div>
+                            
+                            {/* Bottom resize handle - only for duration modification */}
+                            <div
+                              className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize hover:bg-green-500 hover:bg-opacity-30 transition-colors border-b-2 border-transparent hover:border-green-400"
+                              onMouseDown={(e) => handleResizeStart(e, event)}
+                              title="Resize duration (drag down to extend)"
+                            />
                           </div>
                         )
                       })}
