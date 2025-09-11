@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Plus, Calendar, Grid3X3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,51 +31,10 @@ const eventColors = {
 
 export default function SimpleCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [events, setEvents] = useState<Event[]>([
-    // Sample overlapping events for demonstration
-    {
-      id: '1',
-      title: 'Team Meeting',
-      date: new Date(),
-      time: '09:00',
-      duration: 60,
-      color: 'blue'
-    },
-    {
-      id: '2',
-      title: 'Client Call',
-      date: new Date(),
-      time: '09:30',
-      duration: 30,
-      color: 'green'
-    },
-    {
-      id: '3',
-      title: 'Lunch',
-      date: new Date(),
-      time: '12:00',
-      duration: 60,
-      color: 'orange'
-    },
-    {
-      id: '4',
-      title: 'Project Review',
-      date: new Date(),
-      time: '14:00',
-      duration: 90,
-      color: 'purple'
-    },
-    {
-      id: '5',
-      title: 'Quick Sync',
-      date: new Date(),
-      time: '14:30',
-      duration: 30,
-      color: 'red'
-    }
-  ])
+  const [events, setEvents] = useState<Event[]>([])
   const [showEventForm, setShowEventForm] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [view, setView] = useState<'month' | 'week'>('week')
   const [showOverlapWarning, setShowOverlapWarning] = useState(false)
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null)
@@ -84,6 +43,98 @@ export default function SimpleCalendar() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [dropIndicator, setDropIndicator] = useState<{ day: Date; time: string } | null>(null)
   // Resize functionality completely removed
+
+  // localStorage functions
+  const saveEventsToStorage = (eventsToSave: Event[]) => {
+    try {
+      const eventsWithSerializedDates = eventsToSave.map(event => ({
+        ...event,
+        date: event.date.toISOString()
+      }))
+      localStorage.setItem('calendar-events', JSON.stringify(eventsWithSerializedDates))
+      serverLog(`Calendar: Saved ${eventsToSave.length} events to localStorage`, 'info')
+    } catch (error) {
+      serverLog(`Calendar: Error saving events to localStorage: ${error}`, 'error')
+    }
+  }
+
+  const loadEventsFromStorage = (): Event[] => {
+    try {
+      const stored = localStorage.getItem('calendar-events')
+      if (stored) {
+        const parsedEvents = JSON.parse(stored).map((event: any) => ({
+          ...event,
+          date: new Date(event.date)
+        }))
+        serverLog(`Calendar: Loaded ${parsedEvents.length} events from localStorage`, 'info')
+        return parsedEvents
+      }
+    } catch (error) {
+      serverLog(`Calendar: Error loading events from localStorage: ${error}`, 'error')
+    }
+    return []
+  }
+
+  // Load events from localStorage on component mount
+  useEffect(() => {
+    const loadedEvents = loadEventsFromStorage()
+    if (loadedEvents.length === 0) {
+      // Add sample events if no events exist
+      const sampleEvents: Event[] = [
+        {
+          id: '1',
+          title: 'Team Meeting',
+          date: new Date(),
+          time: '09:00',
+          duration: 60,
+          color: 'blue'
+        },
+        {
+          id: '2',
+          title: 'Client Call',
+          date: new Date(),
+          time: '09:30',
+          duration: 30,
+          color: 'green'
+        },
+        {
+          id: '3',
+          title: 'Lunch',
+          date: new Date(),
+          time: '12:00',
+          duration: 60,
+          color: 'orange'
+        },
+        {
+          id: '4',
+          title: 'Project Review',
+          date: new Date(),
+          time: '14:00',
+          duration: 90,
+          color: 'purple'
+        },
+        {
+          id: '5',
+          title: 'Quick Sync',
+          date: new Date(),
+          time: '14:30',
+          duration: 30,
+          color: 'red'
+        }
+      ]
+      setEvents(sampleEvents)
+      saveEventsToStorage(sampleEvents)
+    } else {
+      setEvents(loadedEvents)
+    }
+  }, [])
+
+  // Save events to localStorage whenever events change
+  useEffect(() => {
+    if (events.length > 0) {
+      saveEventsToStorage(events)
+    }
+  }, [events])
 
   // Month view calculations
   const monthStart = startOfMonth(currentDate)
@@ -247,7 +298,39 @@ export default function SimpleCalendar() {
     setEvents([...events, newEvent])
     setShowEventForm(false)
     setSelectedDate(null)
+    setEditingEvent(null)
     serverLog(`Calendar: Created new event "${eventData.title}" on ${format(eventData.date, 'MMMM d, yyyy')} at ${eventData.time}`, 'info')
+  }
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event)
+    setSelectedDate(event.date)
+    setShowEventForm(true)
+    serverLog(`Calendar: Started editing event "${event.title}"`, 'info')
+  }
+
+  const handleUpdateEvent = (eventData: Omit<Event, 'id'>) => {
+    if (editingEvent) {
+      const updatedEvent: Event = {
+        ...eventData,
+        id: editingEvent.id,
+        color: eventData.color || editingEvent.color,
+        duration: eventData.duration || 60
+      }
+      setEvents(events.map(e => e.id === editingEvent.id ? updatedEvent : e))
+      setShowEventForm(false)
+      setSelectedDate(null)
+      setEditingEvent(null)
+      serverLog(`Calendar: Updated event "${eventData.title}" on ${format(eventData.date, 'MMMM d, yyyy')} at ${eventData.time}`, 'info')
+    }
+  }
+
+  const handleDeleteEvent = (eventId: string) => {
+    const eventToDelete = events.find(e => e.id === eventId)
+    if (eventToDelete) {
+      setEvents(events.filter(e => e.id !== eventId))
+      serverLog(`Calendar: Deleted event "${eventToDelete.title}"`, 'info')
+    }
   }
 
   // Drag and drop handlers
@@ -588,7 +671,7 @@ export default function SimpleCalendar() {
                         return (
                           <div
                             key={event.id}
-                            className={`absolute rounded-sm border-l-2 cursor-move hover:opacity-80 transition-all ${
+                            className={`absolute rounded-sm border-l-2 cursor-move hover:opacity-80 transition-all group ${
                               hasTooManyOverlaps 
                                 ? 'bg-red-100 text-red-800 border-red-200' 
                                 : `${colorClass.bg} ${colorClass.text} ${colorClass.border}`
@@ -601,13 +684,42 @@ export default function SimpleCalendar() {
                                 setShowOverlapWarning(true)
                                 serverLog('Calendar: User clicked on event with too many overlaps - showing warning', 'warn')
                               }
-                              // Could add event editing here
+                            }}
+                            onDoubleClick={(e) => {
+                              e.stopPropagation()
+                              handleEditEvent(event)
                             }}
                           >
                             {/* Event content */}
-                            <div className="p-1 text-xs font-medium truncate select-none">
-                              {event.time} - {event.title}
-                              {hasTooManyOverlaps && ' ⚠️'}
+                            <div className="p-1 text-xs font-medium truncate select-none flex items-center justify-between">
+                              <span>
+                                {event.time} - {event.title}
+                                {hasTooManyOverlaps && ' ⚠️'}
+                              </span>
+                              <div className="flex gap-1 ml-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEditEvent(event)
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 hover:bg-blue-200 rounded px-1 text-xs transition-opacity"
+                                  title="Edit event"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (confirm(`Delete "${event.title}"?`)) {
+                                      handleDeleteEvent(event.id)
+                                    }
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 hover:bg-red-200 rounded px-1 text-xs transition-opacity"
+                                  title="Delete event"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )
@@ -621,15 +733,18 @@ export default function SimpleCalendar() {
         )}
       </div>
 
-      {/* Event Creation Form */}
+      {/* Event Creation/Edit Form */}
       {showEventForm && selectedDate && (
         <EventForm
           selectedDate={selectedDate}
           selectedTime={format(selectedDate, 'HH:mm')}
+          editingEvent={editingEvent}
           onCreateEvent={handleCreateEvent}
+          onUpdateEvent={handleUpdateEvent}
           onClose={() => {
             setShowEventForm(false)
             setSelectedDate(null)
+            setEditingEvent(null)
           }}
         />
       )}
@@ -698,30 +813,43 @@ export default function SimpleCalendar() {
 function EventForm({ 
   selectedDate, 
   selectedTime,
-  onCreateEvent, 
+  editingEvent,
+  onCreateEvent,
+  onUpdateEvent,
   onClose 
 }: { 
   selectedDate: Date
   selectedTime?: string
+  editingEvent?: Event | null
   onCreateEvent: (event: Omit<Event, 'id'>) => void
+  onUpdateEvent?: (event: Omit<Event, 'id'>) => void
   onClose: () => void 
 }) {
-  const [title, setTitle] = useState('')
-  const [time, setTime] = useState(selectedTime || format(selectedDate, 'HH:mm'))
-  const [description, setDescription] = useState('')
-  const [duration, setDuration] = useState(60) // Default 1 hour
+  const [title, setTitle] = useState(editingEvent?.title || '')
+  const [time, setTime] = useState(editingEvent?.time || selectedTime || format(selectedDate, 'HH:mm'))
+  const [description, setDescription] = useState(editingEvent?.description || '')
+  const [duration, setDuration] = useState(editingEvent?.duration || 60) // Default 1 hour
+  const [color, setColor] = useState<Event['color']>(editingEvent?.color || 'blue')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (title.trim()) {
-      onCreateEvent({
+      const eventData = {
         title: title.trim(),
         date: selectedDate,
         time,
         description: description.trim() || undefined,
-        duration
-      })
-      serverLog(`Calendar: Event form submitted for "${title.trim()}" on ${format(selectedDate, 'MMMM d, yyyy')} for ${duration} minutes`, 'info')
+        duration,
+        color
+      }
+      
+      if (editingEvent && onUpdateEvent) {
+        onUpdateEvent(eventData)
+        serverLog(`Calendar: Event form updated for "${title.trim()}" on ${format(selectedDate, 'MMMM d, yyyy')} for ${duration} minutes`, 'info')
+      } else {
+        onCreateEvent(eventData)
+        serverLog(`Calendar: Event form submitted for "${title.trim()}" on ${format(selectedDate, 'MMMM d, yyyy')} for ${duration} minutes`, 'info')
+      }
     } else {
       serverLog('Calendar: Event form submitted with empty title - validation failed', 'warn')
     }
@@ -732,7 +860,9 @@ function EventForm({
       <div className="w-full max-w-lg bg-white rounded-lg shadow-xl">
         {/* Google Calendar-style Header */}
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Create event</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            {editingEvent ? 'Edit event' : 'Create event'}
+          </h2>
         </div>
         
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
@@ -794,6 +924,30 @@ function EventForm({
             </div>
           </div>
           
+          {/* Color Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Color
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {Object.entries(eventColors).map(([colorName, colorClass]) => (
+                <button
+                  key={colorName}
+                  type="button"
+                  onClick={() => setColor(colorName as Event['color'])}
+                  className={`p-3 rounded-md border-2 transition-all ${
+                    color === colorName 
+                      ? 'border-gray-400 ring-2 ring-blue-500' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  } ${colorClass.bg} ${colorClass.text}`}
+                  title={colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                >
+                  {colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -827,7 +981,7 @@ function EventForm({
             onClick={handleSubmit}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4"
           >
-            Save
+            {editingEvent ? 'Update' : 'Save'}
           </Button>
         </div>
       </div>
