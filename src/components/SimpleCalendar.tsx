@@ -419,18 +419,16 @@ export default function SimpleCalendar() {
     }
   }
 
-  const handleCreateEventWithNewDate = (newDate: Date) => {
+  const handleCreateEventWithNewDate = (updatedEventData: Omit<Event, 'id'>) => {
     if (!pendingEventData) return
 
     const colors = Object.keys(eventColors) as Array<keyof typeof eventColors>
     const randomColor = colors[Math.floor(Math.random() * colors.length)]
     
     const newEvent: Event = {
-      ...pendingEventData,
+      ...updatedEventData,
       id: Date.now().toString(),
-      date: newDate,
-      color: randomColor,
-      duration: pendingEventData.duration || 60
+      color: updatedEventData.color || randomColor
     }
     
     setEvents([...events, newEvent])
@@ -439,7 +437,7 @@ export default function SimpleCalendar() {
     setShowEventForm(false)
     setSelectedDate(null)
     setEditingEvent(null)
-    serverLog(`Calendar: Created event "${pendingEventData.title}" on new date ${format(newDate, 'MMMM d, yyyy')} to avoid overlap`, 'info')
+    serverLog(`Calendar: Created event "${updatedEventData.title}" on ${format(updatedEventData.date, 'MMMM d, yyyy')} at ${updatedEventData.time} to avoid overlap`, 'info')
   }
 
   // Drag and drop handlers
@@ -1154,7 +1152,7 @@ function EventForm({
   )
 }
 
-// Overlap Warning Dialog Component with Date Picker
+// Overlap Warning Dialog Component with Date Picker and Editing
 function OverlapWarningDialog({ 
   pendingEventData, 
   onClose, 
@@ -1165,9 +1163,21 @@ function OverlapWarningDialog({
   onCreateWithNewDate: (newDate: Date) => void
 }) {
   const [selectedNewDate, setSelectedNewDate] = useState(pendingEventData.date)
+  const [editedEventData, setEditedEventData] = useState({
+    title: pendingEventData.title,
+    time: pendingEventData.time,
+    duration: pendingEventData.duration || 60,
+    description: pendingEventData.description || '',
+    color: pendingEventData.color || 'blue' as Event['color']
+  })
 
   const handleCreateWithNewDate = () => {
-    onCreateWithNewDate(selectedNewDate)
+    const updatedEventData = {
+      ...pendingEventData,
+      ...editedEventData,
+      date: selectedNewDate
+    }
+    onCreateWithNewDate(updatedEventData)
   }
 
   return (
@@ -1191,24 +1201,95 @@ function OverlapWarningDialog({
           
           <div className="bg-green-50 border border-green-200 rounded-md p-6 mb-6">
             <p className="text-green-800 font-semibold mb-3 text-lg">
-              Quick Solution: Change the Date
+              Quick Solution: Edit Event Details
             </p>
             <p className="text-green-700 text-base mb-4">
-              Create your event on a different date to avoid the overlap:
+              Edit your event details and choose a different date to avoid the overlap:
             </p>
-            <div className="flex items-center gap-4">
-              <label className="text-green-800 font-medium">New Date:</label>
-              <input
-                type="date"
-                value={format(selectedNewDate, 'yyyy-MM-dd')}
-                onChange={(e) => setSelectedNewDate(new Date(e.target.value))}
-                className="px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
+            
+            <div className="space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-green-800 font-medium mb-1">Event Title:</label>
+                <input
+                  type="text"
+                  value={editedEventData.title}
+                  onChange={(e) => setEditedEventData(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Event title"
+                />
+              </div>
+              
+              {/* Time and Duration */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-green-800 font-medium mb-1">Time:</label>
+                  <input
+                    type="time"
+                    value={editedEventData.time}
+                    onChange={(e) => setEditedEventData(prev => ({ ...prev, time: e.target.value }))}
+                    className="w-full px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-green-800 font-medium mb-1">Duration:</label>
+                  <select
+                    value={editedEventData.duration}
+                    onChange={(e) => setEditedEventData(prev => ({ ...prev, duration: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value={15}>15 minutes</option>
+                    <option value={30}>30 minutes</option>
+                    <option value={60}>1 hour</option>
+                    <option value={90}>1.5 hours</option>
+                    <option value={120}>2 hours</option>
+                    <option value={180}>3 hours</option>
+                    <option value={240}>4 hours</option>
+                    <option value={480}>8 hours</option>
+                  </select>
+                </div>
+              </div>
+              
+              {/* Date */}
+              <div>
+                <label className="block text-green-800 font-medium mb-1">Date:</label>
+                <input
+                  type="date"
+                  value={format(selectedNewDate, 'yyyy-MM-dd')}
+                  onChange={(e) => setSelectedNewDate(new Date(e.target.value))}
+                  className="px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Color */}
+              <div>
+                <label className="block text-green-800 font-medium mb-2">Color:</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.entries(eventColors).map(([colorName, colorClass]) => (
+                    <button
+                      key={colorName}
+                      type="button"
+                      onClick={() => setEditedEventData(prev => ({ ...prev, color: colorName as Event['color'] }))}
+                      className={`p-2 rounded-md border-2 transition-all ${
+                        editedEventData.color === colorName 
+                          ? 'border-gray-400 ring-2 ring-green-500' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      } ${colorClass.bg} ${colorClass.text}`}
+                      title={colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                    >
+                      {colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex justify-end">
               <Button
                 onClick={handleCreateWithNewDate}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2"
               >
-                Create on New Date
+                Create Event
               </Button>
             </div>
           </div>
