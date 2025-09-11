@@ -338,7 +338,7 @@ export default function SimpleCalendar() {
       return eventStartMinutes < existingEndMinutes && eventEndMinutes > existingStartMinutes
     })
     
-    // If there are already 2 overlapping events, prevent creation
+    // If there are already 2 overlapping events, prevent creation and show warning
     if (overlappingEvents.length >= 2) {
       setShowOverlapWarning(true)
       serverLog(`Calendar: Prevented creation of third overlapping event "${eventData.title}" - demo limitation`, 'warn')
@@ -388,7 +388,7 @@ export default function SimpleCalendar() {
         return eventStartMinutes < existingEndMinutes && eventEndMinutes > existingStartMinutes
       })
       
-      // If there are already 2 overlapping events, prevent update
+      // If there are already 2 overlapping events, prevent update and show warning
       if (overlappingEvents.length >= 2) {
         setShowOverlapWarning(true)
         serverLog(`Calendar: Prevented update of event "${eventData.title}" - would create third overlap`, 'warn')
