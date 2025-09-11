@@ -893,37 +893,37 @@ export default function SimpleCalendar() {
       {/* Overlap Warning Dialog */}
       {showOverlapWarning && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="w-full max-w-lg bg-white rounded-lg shadow-xl">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <span className="text-red-500 mr-2">🚫</span>
+          <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl">
+            <div className="px-8 py-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                <span className="text-red-500 mr-3 text-2xl">🚫</span>
                 Demo Limitation - Cannot Create Event
               </h2>
             </div>
-            <div className="px-6 py-4">
-              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-                <p className="text-red-800 font-medium mb-2">
+            <div className="px-8 py-6">
+              <div className="bg-red-50 border border-red-200 rounded-md p-6 mb-6">
+                <p className="text-red-800 font-semibold mb-3 text-lg">
                   This demo calendar only supports up to 2 overlapping events.
                 </p>
-                <p className="text-red-700 text-sm">
+                <p className="text-red-700 text-base">
                   You already have 2 events overlapping at this time. Creating a third overlapping event is not allowed in this demonstration.
                 </p>
               </div>
               
-              <p className="text-gray-600 mb-4">
-                <strong>What you can do:</strong>
+              <p className="text-gray-700 mb-4 text-lg font-semibold">
+                What you can do:
               </p>
-              <ul className="text-sm text-gray-600 space-y-2 mb-4">
+              <ul className="text-base text-gray-600 space-y-3 mb-6">
                 <li>• Choose a different time slot that doesn't overlap</li>
                 <li>• Edit one of the existing events to change its time</li>
                 <li>• Delete one of the existing overlapping events</li>
               </ul>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                <p className="text-blue-800 text-sm font-medium mb-2">
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-6">
+                <p className="text-blue-800 text-base font-semibold mb-3">
                   In a production calendar system:
                 </p>
-                <ul className="text-sm text-blue-700 space-y-1">
+                <ul className="text-base text-blue-700 space-y-2">
                   <li>• Events would stack vertically with smaller heights</li>
                   <li>• Show a "+X more" indicator for additional events</li>
                   <li>• Provide conflict resolution and scheduling tools</li>
@@ -931,13 +931,13 @@ export default function SimpleCalendar() {
                 </ul>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+            <div className="px-8 py-6 border-t border-gray-200 flex justify-end">
               <Button 
                 onClick={() => {
                   setShowOverlapWarning(false)
                   serverLog('Calendar: User closed overlap prevention warning dialog', 'info')
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-medium"
               >
                 Understood
               </Button>
