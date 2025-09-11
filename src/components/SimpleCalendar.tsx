@@ -203,7 +203,7 @@ export default function SimpleCalendar() {
     const topOffset = startMinutes - (6 * 60) // Subtract 6 AM offset
     const height = duration
     
-    // Find overlapping events
+    // Find overlapping events with improved logic
     const overlappingEvents = dayEvents.filter(otherEvent => {
       if (otherEvent.id === event.id) return false
       
@@ -213,8 +213,15 @@ export default function SimpleCalendar() {
       const otherEndMinutes = otherStartMinutes + otherDuration
       const eventEndMinutes = startMinutes + duration
       
-      // Check if events overlap
+      // Check if events overlap (improved overlap detection)
       return startMinutes < otherEndMinutes && eventEndMinutes > otherStartMinutes
+    })
+    
+    // Sort overlapping events by start time for consistent positioning
+    const sortedOverlappingEvents = overlappingEvents.sort((a, b) => {
+      const [aHours, aMinutes] = a.time.split(':').map(Number)
+      const [bHours, bMinutes] = b.time.split(':').map(Number)
+      return (aHours * 60 + aMinutes) - (bHours * 60 + bMinutes)
     })
     
     // Only handle up to 2 overlapping events
@@ -234,16 +241,23 @@ export default function SimpleCalendar() {
     
     // Handle 2 overlapping events side by side
     if (overlappingEvents.length === 1) {
-      const otherEvent = overlappingEvents[0]
-      const isFirst = event.time <= otherEvent.time
+      // Find this event's position in the sorted list
+      const allEventsInTimeRange = [event, ...overlappingEvents].sort((a, b) => {
+        const [aHours, aMinutes] = a.time.split(':').map(Number)
+        const [bHours, bMinutes] = b.time.split(':').map(Number)
+        return (aHours * 60 + aMinutes) - (bHours * 60 + bMinutes)
+      })
+      
+      const eventIndex = allEventsInTimeRange.findIndex(e => e.id === event.id)
+      const isFirst = eventIndex === 0
       
       return {
         top: `${Math.max(0, topOffset)}px`,
         height: `${height}px`,
         minHeight: '20px',
-        width: '50%',
-        left: isFirst ? '0%' : '50%',
-        zIndex: 10
+        width: 'calc(50% - 1px)', // Slightly less than 50% to prevent gaps
+        left: isFirst ? '0%' : 'calc(50% + 1px)', // Add 1px gap between events
+        zIndex: 10 + (isFirst ? 1 : 0) // Slight z-index difference for visual layering
       }
     }
     
