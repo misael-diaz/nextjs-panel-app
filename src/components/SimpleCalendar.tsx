@@ -38,6 +38,7 @@ export default function SimpleCalendar() {
   const [view, setView] = useState<'month' | 'week'>('week')
   const [showOverlapWarning, setShowOverlapWarning] = useState(false)
   const [pendingEventData, setPendingEventData] = useState<Omit<Event, 'id'> | null>(null)
+  const [editingEventInDialog, setEditingEventInDialog] = useState<Event | null>(null)
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -392,6 +393,8 @@ export default function SimpleCalendar() {
       
       // If there are already 2 overlapping events, prevent update and show warning
       if (overlappingEvents.length >= 2) {
+        setPendingEventData(eventData)
+        setEditingEventInDialog(editingEvent)
         setShowOverlapWarning(true)
         serverLog(`Calendar: Prevented update of event "${eventData.title}" - would create third overlap`, 'warn')
         return
@@ -434,10 +437,30 @@ export default function SimpleCalendar() {
     setEvents([...events, newEvent])
     setShowOverlapWarning(false)
     setPendingEventData(null)
+    setEditingEventInDialog(null)
     setShowEventForm(false)
     setSelectedDate(null)
     setEditingEvent(null)
     serverLog(`Calendar: Created event "${updatedEventData.title}" on ${format(updatedEventData.date, 'MMMM d, yyyy')} at ${updatedEventData.time} to avoid overlap`, 'info')
+  }
+
+  const handleUpdateEventWithNewDate = (updatedEventData: Omit<Event, 'id'>) => {
+    if (!editingEventInDialog) return
+
+    const updatedEvent: Event = {
+      ...updatedEventData,
+      id: editingEventInDialog.id,
+      color: updatedEventData.color || editingEventInDialog.color
+    }
+    
+    setEvents(events.map(e => e.id === editingEventInDialog.id ? updatedEvent : e))
+    setShowOverlapWarning(false)
+    setPendingEventData(null)
+    setEditingEventInDialog(null)
+    setShowEventForm(false)
+    setSelectedDate(null)
+    setEditingEvent(null)
+    serverLog(`Calendar: Updated event "${updatedEventData.title}" on ${format(updatedEventData.date, 'MMMM d, yyyy')} at ${updatedEventData.time} to avoid overlap`, 'info')
   }
 
   // Drag and drop handlers
@@ -943,12 +966,15 @@ export default function SimpleCalendar() {
       {showOverlapWarning && pendingEventData && (
         <OverlapWarningDialog
           pendingEventData={pendingEventData}
+          editingEvent={editingEventInDialog}
           onClose={() => {
             setShowOverlapWarning(false)
             setPendingEventData(null)
+            setEditingEventInDialog(null)
             serverLog('Calendar: User closed overlap prevention warning dialog', 'info')
           }}
           onCreateWithNewDate={handleCreateEventWithNewDate}
+          onUpdateWithNewDate={handleUpdateEventWithNewDate}
         />
       )}
 
@@ -1155,12 +1181,16 @@ function EventForm({
 // Overlap Warning Dialog Component with Date Picker and Editing
 function OverlapWarningDialog({ 
   pendingEventData, 
+  editingEvent,
   onClose, 
-  onCreateWithNewDate 
+  onCreateWithNewDate,
+  onUpdateWithNewDate
 }: { 
   pendingEventData: Omit<Event, 'id'>
+  editingEvent: Event | null
   onClose: () => void
-  onCreateWithNewDate: (newDate: Date) => void
+  onCreateWithNewDate: (updatedEventData: Omit<Event, 'id'>) => void
+  onUpdateWithNewDate: (updatedEventData: Omit<Event, 'id'>) => void
 }) {
   const [selectedNewDate, setSelectedNewDate] = useState(pendingEventData.date)
   const [editedEventData, setEditedEventData] = useState({
@@ -1171,23 +1201,28 @@ function OverlapWarningDialog({
     color: pendingEventData.color || 'blue' as Event['color']
   })
 
-  const handleCreateWithNewDate = () => {
+  const handleSaveWithNewDate = () => {
     const updatedEventData = {
       ...pendingEventData,
       ...editedEventData,
       date: selectedNewDate
     }
-    onCreateWithNewDate(updatedEventData)
+    
+    if (editingEvent) {
+      onUpdateWithNewDate(updatedEventData)
+    } else {
+      onCreateWithNewDate(updatedEventData)
+    }
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl">
         <div className="px-8 py-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-            <span className="text-red-500 mr-3 text-2xl">🚫</span>
-            Demo Limitation - Cannot Create Event
-          </h2>
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+              <span className="text-red-500 mr-3 text-2xl">🚫</span>
+              Demo Limitation - Cannot {editingEvent ? 'Update' : 'Create'} Event
+            </h2>
         </div>
         <div className="px-8 py-6">
           <div className="bg-red-50 border border-red-200 rounded-md p-6 mb-6">
@@ -1195,7 +1230,7 @@ function OverlapWarningDialog({
               This demo calendar only supports up to 2 overlapping events.
             </p>
             <p className="text-red-700 text-base">
-              You already have 2 events overlapping at this time. Creating a third overlapping event is not allowed in this demonstration.
+              You already have 2 events overlapping at this time. {editingEvent ? 'Updating' : 'Creating'} a third overlapping event is not allowed in this demonstration.
             </p>
           </div>
           
@@ -1286,10 +1321,10 @@ function OverlapWarningDialog({
             
             <div className="mt-4 flex justify-end">
               <Button
-                onClick={handleCreateWithNewDate}
+                onClick={handleSaveWithNewDate}
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-2"
               >
-                Create Event
+                {editingEvent ? 'Update Event' : 'Create Event'}
               </Button>
             </div>
           </div>
