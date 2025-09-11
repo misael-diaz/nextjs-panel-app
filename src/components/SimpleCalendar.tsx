@@ -1064,7 +1064,10 @@ function EventForm({
             <input
               type="date"
               value={format(date, 'yyyy-MM-dd')}
-              onChange={(e) => setDate(new Date(e.target.value))}
+              onChange={(e) => {
+                const [year, month, day] = e.target.value.split('-').map(Number)
+                setDate(new Date(year, month - 1, day))
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <div className="text-xs text-gray-500 mt-1">
@@ -1300,7 +1303,10 @@ function OverlapWarningDialog({
                 <input
                   type="date"
                   value={format(selectedNewDate, 'yyyy-MM-dd')}
-                  onChange={(e) => setSelectedNewDate(new Date(e.target.value))}
+                  onChange={(e) => {
+                    const [year, month, day] = e.target.value.split('-').map(Number)
+                    setSelectedNewDate(new Date(year, month - 1, day))
+                  }}
                   className="px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
