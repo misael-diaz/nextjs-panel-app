@@ -83,12 +83,7 @@ export default function SimpleCalendar() {
   const [isDragging, setIsDragging] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [dropIndicator, setDropIndicator] = useState<{ day: Date; time: string } | null>(null)
-  // Resize functionality temporarily disabled
-  // const [isResizing, setIsResizing] = useState(false)
-  // const [resizeHandle, setResizeHandle] = useState<'top' | 'bottom' | null>(null)
-  // const [resizeStartY, setResizeStartY] = useState(0)
-  // const [resizeStartDuration, setResizeStartDuration] = useState(0)
-  // const [resizeStartTime, setResizeStartTime] = useState('')
+  // Resize functionality completely removed
 
   // Month view calculations
   const monthStart = startOfMonth(currentDate)
@@ -280,68 +275,7 @@ export default function SimpleCalendar() {
     }
   }
 
-  // Resize handlers temporarily disabled
-  /*
-  const handleResizeStart = (event: React.MouseEvent, eventData: Event, handle: 'top' | 'bottom') => {
-    event.preventDefault()
-    event.stopPropagation()
-    
-    setDraggedEvent(eventData)
-    setIsResizing(true)
-    setResizeHandle(handle)
-    setResizeStartY(event.clientY)
-    setResizeStartDuration(eventData.duration || 60)
-    setResizeStartTime(eventData.time)
-    
-    serverLog(`Calendar: Started resizing event "${eventData.title}" from ${handle} - Start time: ${eventData.time}, Duration: ${eventData.duration || 60}`, 'info')
-  }
-
-  const handleResizeEnd = () => {
-    if (isResizing && draggedEvent) {
-      setIsResizing(false)
-      setResizeHandle(null)
-      setDraggedEvent(null)
-      setResizeStartY(0)
-      setResizeStartDuration(0)
-      setResizeStartTime('')
-      serverLog(`Calendar: Finished resizing event "${draggedEvent.title}"`, 'info')
-    }
-  }
-
-  const handleResize = (event: React.MouseEvent) => {
-    if (!isResizing || !draggedEvent || !resizeHandle) return
-
-    const deltaY = event.clientY - resizeStartY
-    const deltaMinutes = Math.round(deltaY) // 1 pixel = 1 minute
-    
-    if (resizeHandle === 'bottom') {
-      // Bottom resize: only change duration, keep start time fixed
-      const newDuration = Math.max(15, resizeStartDuration + deltaMinutes)
-      
-      setEvents(events.map(e => 
-        e.id === draggedEvent.id 
-          ? { ...e, duration: newDuration }
-          : e
-      ))
-      
-    } else if (resizeHandle === 'top') {
-      // Top resize: change start time and adjust duration
-      const [hours, minutes] = resizeStartTime.split(':').map(Number)
-      const startMinutes = hours * 60 + minutes
-      const newStartMinutes = Math.max(6 * 60, startMinutes + deltaMinutes)
-      
-      const newStartTime = `${Math.floor(newStartMinutes / 60).toString().padStart(2, '0')}:${(newStartMinutes % 60).toString().padStart(2, '0')}`
-      const durationChange = startMinutes - newStartMinutes
-      const newDuration = Math.max(15, resizeStartDuration + durationChange)
-      
-      setEvents(events.map(e => 
-        e.id === draggedEvent.id 
-          ? { ...e, time: newStartTime, duration: newDuration }
-          : e
-      ))
-    }
-  }
-  */
+  // Resize handlers completely removed
 
   const calculateDropTime = (relativeY: number) => {
     const timeSlotHeight = 60 // pixels per hour
