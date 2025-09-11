@@ -320,6 +320,31 @@ export default function SimpleCalendar() {
   }
 
   const handleCreateEvent = (eventData: Omit<Event, 'id'>) => {
+    // Check for overlapping events before creating
+    const dayEvents = getEventsForDate(eventData.date)
+    const [eventHours, eventMinutes] = eventData.time.split(':').map(Number)
+    const eventStartMinutes = eventHours * 60 + eventMinutes
+    const eventDuration = eventData.duration || 60
+    const eventEndMinutes = eventStartMinutes + eventDuration
+    
+    // Find overlapping events
+    const overlappingEvents = dayEvents.filter(existingEvent => {
+      const [existingHours, existingMinutes] = existingEvent.time.split(':').map(Number)
+      const existingStartMinutes = existingHours * 60 + existingMinutes
+      const existingDuration = existingEvent.duration || 60
+      const existingEndMinutes = existingStartMinutes + existingDuration
+      
+      // Check if events overlap
+      return eventStartMinutes < existingEndMinutes && eventEndMinutes > existingStartMinutes
+    })
+    
+    // If there are already 2 overlapping events, prevent creation
+    if (overlappingEvents.length >= 2) {
+      setShowOverlapWarning(true)
+      serverLog(`Calendar: Prevented creation of third overlapping event "${eventData.title}" - demo limitation`, 'warn')
+      return
+    }
+    
     const colors = Object.keys(eventColors) as Array<keyof typeof eventColors>
     const randomColor = colors[Math.floor(Math.random() * colors.length)]
     
@@ -345,6 +370,31 @@ export default function SimpleCalendar() {
 
   const handleUpdateEvent = (eventData: Omit<Event, 'id'>) => {
     if (editingEvent) {
+      // Check for overlapping events before updating (excluding the current event being edited)
+      const dayEvents = getEventsForDate(eventData.date).filter(e => e.id !== editingEvent.id)
+      const [eventHours, eventMinutes] = eventData.time.split(':').map(Number)
+      const eventStartMinutes = eventHours * 60 + eventMinutes
+      const eventDuration = eventData.duration || 60
+      const eventEndMinutes = eventStartMinutes + eventDuration
+      
+      // Find overlapping events (excluding the one being edited)
+      const overlappingEvents = dayEvents.filter(existingEvent => {
+        const [existingHours, existingMinutes] = existingEvent.time.split(':').map(Number)
+        const existingStartMinutes = existingHours * 60 + existingMinutes
+        const existingDuration = existingEvent.duration || 60
+        const existingEndMinutes = existingStartMinutes + existingDuration
+        
+        // Check if events overlap
+        return eventStartMinutes < existingEndMinutes && eventEndMinutes > existingStartMinutes
+      })
+      
+      // If there are already 2 overlapping events, prevent update
+      if (overlappingEvents.length >= 2) {
+        setShowOverlapWarning(true)
+        serverLog(`Calendar: Prevented update of event "${eventData.title}" - would create third overlap`, 'warn')
+        return
+      }
+      
       const updatedEvent: Event = {
         ...eventData,
         id: editingEvent.id,
@@ -843,37 +893,53 @@ export default function SimpleCalendar() {
       {/* Overlap Warning Dialog */}
       {showOverlapWarning && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+          <div className="w-full max-w-lg bg-white rounded-lg shadow-xl">
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <span className="text-yellow-500 mr-2">⚠️</span>
-                Demo Limitation
+                <span className="text-red-500 mr-2">🚫</span>
+                Demo Limitation - Cannot Create Event
               </h2>
             </div>
             <div className="px-6 py-4">
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                <p className="text-red-800 font-medium mb-2">
+                  This demo calendar only supports up to 2 overlapping events.
+                </p>
+                <p className="text-red-700 text-sm">
+                  You already have 2 events overlapping at this time. Creating a third overlapping event is not allowed in this demonstration.
+                </p>
+              </div>
+              
               <p className="text-gray-600 mb-4">
-                This demo calendar supports up to 2 overlapping events displayed side by side. 
-                For more than 2 overlapping events, a production calendar would typically:
+                <strong>What you can do:</strong>
               </p>
               <ul className="text-sm text-gray-600 space-y-2 mb-4">
-                <li>• Stack events vertically with smaller heights</li>
-                <li>• Show a "+X more" indicator</li>
-                <li>• Allow expanding to see all events</li>
-                <li>• Provide conflict resolution tools</li>
+                <li>• Choose a different time slot that doesn't overlap</li>
+                <li>• Edit one of the existing events to change its time</li>
+                <li>• Delete one of the existing overlapping events</li>
               </ul>
-              <p className="text-sm text-gray-500">
-                This is a demonstration of the side-by-side overlapping feature for 2 events.
-              </p>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <p className="text-blue-800 text-sm font-medium mb-2">
+                  In a production calendar system:
+                </p>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• Events would stack vertically with smaller heights</li>
+                  <li>• Show a "+X more" indicator for additional events</li>
+                  <li>• Provide conflict resolution and scheduling tools</li>
+                  <li>• Allow expanding to see all overlapping events</li>
+                </ul>
+              </div>
             </div>
             <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
               <Button 
                 onClick={() => {
                   setShowOverlapWarning(false)
-                  serverLog('Calendar: User closed overlap warning dialog', 'info')
+                  serverLog('Calendar: User closed overlap prevention warning dialog', 'info')
                 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4"
               >
-                Got it!
+                Understood
               </Button>
             </div>
           </div>
